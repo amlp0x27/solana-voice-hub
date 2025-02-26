@@ -235,10 +235,10 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
-    // Replace with your actual Render URL after deployment
-    const socket = io('https://solana-voice-hub.onrender.com', { reconnection: true });
+    // Updated to new Render URL
+    const socket = io('https://solana-voice-hub-node.onrender.com', { reconnection: true });
     const peer = new Peer({
-      host: 'solana-voice-hub.onrender.com',
+      host: 'solana-voice-hub-node.onrender.com',
       path: '/peerjs',
       secure: true,
       debug: 2
