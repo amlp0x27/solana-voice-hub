@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Solana Voice Hub</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .container {
+      display: flex;
+      width: 90%;
+      max-width: 1200px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
+      backdrop-filter: blur(15px);
+      animation: fadeIn 1s ease-in;
+      position: relative;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    #logo {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 80px;
+      height: 80px;
+    }
+    .main-content {
+      flex: 3;
+      padding-right: 20px;
+    }
+    .voice-sidebar {
+      flex: 1;
+      padding-left: 20px;
+      border-left: 2px solid #00ffcc;
+    }
+    h1 {
+      text-align: center;
+      color: #00ffcc;
+      text-shadow: 0 0 15px #00ffcc;
+      font-size: 2.5em;
+      margin-bottom: 15px;
+    }
+    #userCount {
+      text-align: center;
+      font-size: 1.2em;
+      color: #00ccaa;
+    }
+    .input-group, .chat-group, .kick-group, .links {
+      margin: 15px 0;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #00ffcc;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.4);
+      color: #fff;
+      font-size: 16px;
+    }
+    textarea { height: 100px; resize: none; }
+    button, a.button {
+      padding: 12px 25px;
+      margin: 5px;
+      background: linear-gradient(45deg, #00ffcc, #00ccaa);
+      color: #0f0c29;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 16px;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s;
+    }
+    button:hover, a.button:hover {
+      box-shadow: 0 0 20px #00ffcc;
+      transform: scale(1.05);
+    }
+    #status, #tokenInfo, #coinStats {
+      margin: 10px 0;
+      font-size: 18px;
+      text-align: center;
+      color: #00ccaa;
+    }
+    #chatBox {
+      max-height: 200px;
+      overflow-y: auto;
+      background: rgba(0, 255, 204, 0.1);
+      border-radius: 10px;
+      padding: 10px;
+      list-style: none;
+    }
+    #chatBox li {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      margin: 5px 0;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+    }
+    #typingIndicator {
+      font-size: 14px;
+      color: #00ccaa;
+      margin-top: 5px;
+    }
+    #voiceUsers {
+      list-style: none;
+      padding: 0;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    #voiceUsers li {
+      display: flex;
+      align-items: center;
+      margin: 10px 0;
+      cursor: pointer;
+      position: relative;
+    }
+    #voiceUsers img {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+      transition: box-shadow 0.2s;
+    }
+    #voiceUsers img.speaking {
+      box-shadow: 0 0 15px #00ffcc;
+    }
+    #voiceUsers img.muted {
+      opacity: 0.5;
+    }
+    #voiceUsers span {
+      flex-grow: 1;
+    }
+    .mute-btn {
+      padding: 5px 10px;
+      font-size: 12px;
+      background: #ff5555;
+    }
+    .mute-btn:hover {
+      background: #ff7777;
+    }
+    .kick-group { display: none; }
+    .kick-group.active { display: block; }
+    #volumeMeter {
+      width: 100%;
+      height: 10px;
+      background: #333;
+      border-radius: 5px;
+      margin-top: 10px;
+    }
+    #volumeMeter div {
+      height: 100%;
+      background: #00ffcc;
+      border-radius: 5px;
+      width: 0;
+      transition: width 0.1s;
+    }
+    @media (max-width: 800px) {
+      .container { flex-direction: column; }
+      .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
+    }
+  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="container">
+    <!-- New Logo: Sharp Circle with Futuristic "S" -->
+    <img id="logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQ1IiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGZmY2MiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik00MCAzMFM1MCAyNSA2MCAzNUM2MCA0NSA1MCA1NSA0MCA2NUM0MCA1NSA0MCA0NSIgc3Ryb2tlPSIjMDBmZmNjIiBzdHJva2Utd2lkdGg9IjgiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPjxjaXJjbGUgY3g9IjUwIiBjeT0iNTAiIHI9IjQiIGZpbGw9IiMwMGZmY2MiLz48L3N2Zz4=" alt="Solana Voice Hub Logo">
+    <div id="loginScreen">
+      <h1>Solana Voice Hub</h1>
+      <div style="text-align: center;">
+        <input type="text" id="usernameInput" placeholder="Enter your username" style="display: inline-block; width: 300px;">
+        <br>
+        <button id="loginBtn" style="margin-top: 15px;">Join</button>
+      </div>
+    </div>
+    <div id="chatScreen" style="display:none;" class="main-content">
+      <h1>Solana Voice Hub</h1>
+      <p id="userCount">Users Online: 0</p>
+      <div class="input-group">
+        <input type="text" id="contractAddress" placeholder="Enter Solana Address (e.g., 4k3D...)">
+        <button id="joinBtn">Join Voice Chat</button>
+        <button id="leaveBtn" style="display:none;">Leave Room</button>
+        <button id="muteBtn" style="display:none;">Mute</button>
+      </div>
+      <p id="status">Enter a Solana address to start!</p>
+      <p id="tokenInfo"></p>
+      <p id="coinStats"></p>
+      <div class="kick-group">
+        <select id="kickSelect"></select>
+        <button id="voteKickBtn">Vote Kick</button>
+      </div>
+      <div class="chat-group">
+        <ul id="chatBox"></ul>
+        <textarea id="chatInput" placeholder="Type a message..."></textarea>
+        <p id="typingIndicator"></p>
+        <button id="sendMsgBtn">Send Message</button>
+      </div>
+      <div id="volumeMeter"><div></div></div>
+      <div class="links">
+        <a href="https://twitter.com/SolanaVoiceHub" target="_blank" class="button">Twitter</a>
+        <a href="#roadmap" id="docsBtn" class="button">Docs & Roadmap</a>
+      </div>
+    </div>
+    <div id="voiceSidebar" class="voice-sidebar" style="display:none;">
+      <h2>Voice Chat</h2>
+      <ul id="voiceUsers"></ul>
+    </div>
+    <div id="roadmapScreen" style="display:none;" class="main-content">
+      <h1>Roadmap & Vision</h1>
+      <p>Solana Voice Hub was created to foster vibrant communities around Solana-based coins. Our mission is to enable voice chats and interactions that bring token holders, enthusiasts, and developers together to grow their projects organically. Here’s our roadmap:</p>
+      <ul>
+        <li><strong>Phase 1: Launch (Now)</strong> - Fully functional voice and text chat for Solana token communities.</li>
+        <li><strong>Phase 2: Integrations (Q2 2025)</strong> - Partner with BullX and Axiom platforms for seamless trading and analytics within chat rooms.</li>
+        <li><strong>Phase 3: Community Growth (Q3 2025)</strong> - Add token-specific channels, verified project badges, and community events.</li>
+        <li><strong>Phase 4: Expansion (Q4 2025)</strong> - Support for other blockchains, mobile app, and advanced moderation tools.</li>
+      </ul>
+      <p>Our goal is to be the go-to hub for crypto communities, driving engagement and adoption through real-time interaction.</p>
+      <button id="backBtn">Back to Chat</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+  <script>
+    // Replace with your actual Render URL after deployment
+    const socket = io('https://solana-voice-hub.onrender.com', { reconnection: true });
+    const peer = new Peer({
+      host: 'solana-voice-hub.onrender.com',
+      path: '/peerjs',
+      secure: true,
+      debug: 2
+    });
+    let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
+    let typingTimeout, mutedUsers = {};
+
+    const loginBtn = document.getElementById('loginBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const leaveBtn = document.getElementById('leaveBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const sendMsgBtn = document.getElementById('sendMsgBtn');
+    const voteKickBtn = document.getElementById('voteKickBtn');
+    const docsBtn = document.getElementById('docsBtn');
+    const backBtn = document.getElementById('backBtn');
+    const chatInput = document.getElementById('chatInput');
+    const volumeMeter = document.getElementById('volumeMeter').querySelector('div');
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        myStream = stream;
+        console.log('Mic access granted');
+        const audioContext = new AudioContext();
+        const analyser = audioContext.createAnalyser();
+        const source = audioContext.createMediaStreamSource(stream);
+        source.connect(analyser);
+        analyser.fftSize = 256;
+        const bufferLength = analyser.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+
+        function updateVolume() {
+          analyser.getByteFrequencyData(dataArray);
+          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+          volumeMeter.style.width = `${(average / 255) * 100}%`;
+          const speaking = average > 20;
+          updateVoiceUser(peer.id, speaking);
+          requestAnimationFrame(updateVolume);
+        }
+        updateVolume();
+      })
+      .catch(err => {
+        console.error('Mic access denied:', err);
+        document.getElementById('status').textContent = 'Mic unavailable - voice chat limited. Enter an address to start!';
+        setTimeout(() => {
+          if (peer.id) updateVoiceUser(peer.id, true);
+          setTimeout(() => updateVoiceUser(peer.id, false), 2000);
+        }, 1000);
+      });
+
+    peer.on('open', (id) => {
+      console.log('My peer ID:', id);
+      updateVoiceUser(id, true);
+      setTimeout(() => updateVoiceUser(id, false), 2000);
+    });
+    peer.on('error', (err) => {
+      console.error('PeerJS error:', err);
+      document.getElementById('status').textContent = 'Voice chat unavailable - server issue!';
+    });
+
+    socket.on('connect', () => console.log('Socket connected:', socket.id));
+    socket.on('connect_error', (err) => console.error('Socket connect error:', err));
+
+    loginBtn.onclick = () => {
+      username = document.getElementById('usernameInput').value.trim();
+      if (!username) return;
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('chatScreen').style.display = 'block';
+    };
+
+    joinBtn.onclick = () => {
+      console.log('Join button clicked');
+      joinRoom();
+    };
+    leaveBtn.onclick = leaveRoom;
+    muteBtn.onclick = toggleMute;
+    sendMsgBtn.onclick = sendMessage;
+    voteKickBtn.onclick = () => {
+      const targetId = document.getElementById('kickSelect').value;
+      if (targetId) {
+        socket.emit('voteKick', { address, targetId });
+        console.log('Vote kick emitted for:', targetId);
+      }
+    };
+    docsBtn.onclick = () => {
+      document.getElementById('chatScreen').style.display = 'none';
+      document.getElementById('voiceSidebar').style.display = 'none';
+      document.getElementById('roadmapScreen').style.display = 'block';
+    };
+    backBtn.onclick = () => {
+      document.getElementById('roadmapScreen').style.display = 'none';
+      document.getElementById('chatScreen').style.display = 'block';
+      document.getElementById('voiceSidebar').style.display = address ? 'block' : 'none';
+    };
+
+    chatInput.oninput = () => {
+      if (!address) return;
+      clearTimeout(typingTimeout);
+      socket.emit('typing', { address, username });
+      typingTimeout = setTimeout(() => socket.emit('stopTyping', { address, username }), 1000);
+    };
+
+    function joinRoom() {
+      address = document.getElementById('contractAddress').value.trim();
+      console.log('Attempting to join room with address:', address);
+      if (!/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+        document.getElementById('status').textContent = 'Invalid Solana address!';
+        console.log('Invalid address');
+        return;
+      }
+      socket.emit('joinRoom', { address, peerId: peer.id || 'pending', avatar, username });
+      document.getElementById('status').textContent = `Joining ${address}...`;
+      console.log('Join event emitted');
+      toggleControls(true);
+      document.getElementById('voiceSidebar').style.display = 'block';
+      fetchTokenInfo(address);
+      fetchCoinStats(address);
+    }
+
+    function leaveRoom() {
+      socket.disconnect();
+      if (myStream) myStream.getTracks().forEach(track => track.stop());
+      document.getElementById('status').textContent = 'You have left the chat room!';
+      document.getElementById('chatBox').innerHTML = '';
+      document.getElementById('voiceUsers').innerHTML = '';
+      document.getElementById('tokenInfo').textContent = '';
+      document.getElementById('coinStats').textContent = '';
+      document.getElementById('voiceSidebar').style.display = 'none';
+      toggleControls(false);
+      address = null;
+      mutedUsers = {};
+    }
+
+    let muted = false;
+    function toggleMute() {
+      if (!myStream) return;
+      muted = !muted;
+      myStream.getAudioTracks()[0].enabled = !muted;
+      muteBtn.textContent = muted ? 'Unmute' : 'Mute';
+    }
+
+    function toggleControls(show) {
+      leaveBtn.style.display = show ? 'inline' : 'none';
+      muteBtn.style.display = show ? 'inline' : 'none';
+      document.getElementById('chatInput').style.display = show ? 'block' : 'none';
+      sendMsgBtn.style.display = show ? 'inline' : 'none';
+      document.getElementById('kickSelect').parentElement.classList.toggle('active', show);
+    }
+
+    socket.on('roomUpdate', (data) => {
+      console.log('Room update received:', data);
+      const userCount = data.users.length;
+      document.getElementById('status').textContent = `Connected to ${data.address} - ${userCount} user(s)`;
+      document.getElementById('userCount').textContent = `Users Online: ${data.totalUsers || 0}`;
+      updateVoiceUsers(data.users);
+      updateChatBox(data.messages);
+      updateKickDropdown(data.users);
+    });
+
+    socket.on('userJoined', ({ id, avatar, username }) => {
+      console.log('User joined:', id);
+      document.getElementById('status').textContent += ` - ${username} joined!`;
+      updateVoiceUser(id, true);
+      setTimeout(() => updateVoiceUser(id, false), 2000);
+    });
+
+    socket.on('userLeft', (id) => {
+      console.log('User left:', id);
+      document.getElementById('status').textContent += ` - User ${id.slice(0, 8)} left!`;
+      delete mutedUsers[id];
+    });
+
+    socket.on('userKicked', (userId) => {
+      console.log('User kicked:', userId);
+      if (socket.id === userId) leaveRoom();
+      document.getElementById('status').textContent += ` - User ${userId.slice(0, 8)} was kicked!`;
+      delete mutedUsers[userId];
+    });
+
+    socket.on('voteUpdate', ({ targetId, votes }) => {
+      console.log('Vote update:', targetId, votes);
+      const userItem = document.querySelector(`#voiceUsers li[data-id="${targetId}"]`);
+      if (userItem) {
+        let voteSpan = userItem.querySelector('#voteStatus');
+        if (!voteSpan) {
+          voteSpan = document.createElement('span');
+          voteSpan.id = 'voteStatus';
+          voteSpan.style.marginLeft = 'auto';
+          voteSpan.style.padding = '5px 10px';
+          voteSpan.style.background = '#ff9900';
+          voteSpan.style.borderRadius = '5px';
+          userItem.appendChild(voteSpan);
+        }
+        voteSpan.textContent = `${votes}/10 votes`;
+      }
+    });
+
+    socket.on('newMessage', (messages) => {
+      console.log('New messages received:', messages);
+      updateChatBox(messages);
+    });
+
+    socket.on('typingUpdate', (typingUsers) => {
+      console.log('Typing update:', typingUsers);
+      document.getElementById('typingIndicator').textContent = 
+        typingUsers.length > 0 ? `${typingUsers.join(', ')} ${typingUsers.length > 1 ? 'are' : 'is'} typing...` : '';
+    });
+
+    function updateVoiceUsers(users) {
+      const voiceUsers = document.getElementById('voiceUsers');
+      voiceUsers.innerHTML = '';
+      if (!Array.isArray(users)) {
+        console.error('Users is not an array:', users);
+        return;
+      }
+      users.forEach(user => {
+        const li = document.createElement('li');
+        li.dataset.id = user.id;
+        li.dataset.peerId = user.peerId;
+        const img = document.createElement('img');
+        img.src = user.avatar || 'https://via.placeholder.com/50';
+        img.alt = user.username;
+        if (user.muted || mutedUsers[user.id]) img.classList.add('muted');
+        li.appendChild(img);
+        li.appendChild(document.createTextNode(` ${user.username}`));
+        const muteBtn = document.createElement('button');
+        muteBtn.classList.add('mute-btn');
+        muteBtn.textContent = user.muted || mutedUsers[user.id] ? 'Unmute' : 'Mute';
+        muteBtn.onclick = () => {
+          socket.emit('muteUser', { address, targetId: user.id });
+          mutedUsers[user.id] = !mutedUsers[user.id];
+          muteBtn.textContent = mutedUsers[user.id] ? 'Unmute' : 'Mute';
+          if (mutedUsers[user.id] && peerCalls[user.peerId]) {
+            peerCalls[user.peerId].audioTrack.enabled = false;
+          } else if (peerCalls[user.peerId]) {
+            peerCalls[user.peerId].audioTrack.enabled = true;
+          }
+        };
+        li.appendChild(muteBtn);
+        voiceUsers.appendChild(li);
+
+        if (user.peerId && user.peerId !== peer.id && myStream) {
+          const call = peer.call(user.peerId, myStream);
+          if (call) {
+            peerCalls[user.peerId] = call;
+            call.on('stream', (remoteStream) => {
+              const audio = new Audio();
+              audio.srcObject = remoteStream;
+              audio.autoplay = true;
+              if (mutedUsers[user.id]) audio.muted = true;
+              audio.onplaying = () => detectSpeaking(remoteStream, user.peerId);
+              document.body.appendChild(audio);
+            });
+            call.on('error', (err) => console.error('Call error:', err));
+          }
+        }
+      });
+    }
+
+    let peerCalls = {};
+
+    function updateKickDropdown(users) {
+      const kickSelect = document.getElementById('kickSelect');
+      kickSelect.innerHTML = '<option value="">Select user to kick</option>';
+      if (!Array.isArray(users)) {
+        console.error('Users is not an array for kick dropdown:', users);
+        return;
+      }
+      users.forEach(user => {
+        if (user.peerId && user.peerId !== peer.id) {
+          const option = document.createElement('option');
+          option.value = user.id;
+          option.textContent = user.username;
+          kickSelect.appendChild(option);
+        }
+      });
+    }
+
+    function updateChatBox(messages) {
+      const chatBox = document.getElementById('chatBox');
+      chatBox.innerHTML = '';
+      if (!Array.isArray(messages)) {
+        console.error('Messages is not an array:', messages);
+        return;
+      }
+      messages.forEach(msg => {
+        const li = document.createElement('li');
+        li.textContent = `${msg.username}: ${msg.text}`;
+        chatBox.appendChild(li);
+      });
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const msg = chatInput.value.trim();
+      if (msg && address) {
+        socket.emit('chatMessage', { address, message: msg, username });
+        console.log('Message sent:', msg);
+        chatInput.value = '';
+        socket.emit('stopTyping', { address, username });
+      }
+    }
+
+    function updateVoiceUser(peerId, speaking) {
+      const userItem = document.querySelector(`#voiceUsers li[data-peer-id="${peerId}"] img`);
+      if (userItem) {
+        userItem.classList.toggle('speaking', speaking && !mutedUsers[peerId]);
+      }
+    }
+
+    function detectSpeaking(stream, peerId) {
+      const audioContext = new AudioContext();
+      const analyser = audioContext.createAnalyser();
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function checkVolume() {
+        analyser.getByteFrequencyData(dataArray);
+        const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+        const speaking = average > 20;
+        updateVoiceUser(peerId, speaking);
+        requestAnimationFrame(checkVolume);
+      }
+      checkVolume();
+    }
+
+    async function fetchTokenInfo(address) {
+      try {
+        const response = await fetch(`https://public-api.solscan.io/token/meta?address=${address}`);
+        if (!response.ok) throw new Error('Token fetch failed');
+        const data = await response.json();
+        document.getElementById('tokenInfo').textContent = data.name ? 
+          `${data.name} (${data.symbol || 'N/A'})` : 
+          'Token info unavailable';
+      } catch (err) {
+        console.error('Token fetch error:', err);
+        document.getElementById('tokenInfo').textContent = 'Token info unavailable';
+      }
+    }
+
+    async function fetchCoinStats(address) {
+      try {
+        const response = await fetch(`https://api.coingecko.com/api/v3/coins/solana/contract/${address}`);
+        if (!response.ok) throw new Error('Coin stats fetch failed');
+        const data = await response.json();
+        document.getElementById('coinStats').textContent = 
+          `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()} | 24h: ${data.market_data.price_change_percentage_24h.toFixed(2)}%`;
+      } catch (err) {
+        console.error('Coin stats error:', err);
+        document.getElementById('coinStats').textContent = 'Stats unavailable';
+      }
+    }
+
+    peer.on('call', (call) => {
+      console.log('Receiving call from:', call.peer);
+      if (myStream) {
+        call.answer(myStream);
+        call.on('stream', (remoteStream) => {
+          const audio = new Audio();
+          audio.srcObject = remoteStream;
+          audio.autoplay = true;
+          if (mutedUsers[call.peer]) audio.muted = true;
+          audio.onplaying = () => detectSpeaking(remoteStream, call.peer);
+          document.body.appendChild(audio);
+          peerCalls[call.peer] = { audioTrack: remoteStream.getAudioTracks()[0] };
+        });
+        call.on('error', (err) => console.error('Call error:', err));
+      }
+    });
+  </script>
+</body>
+</html>
