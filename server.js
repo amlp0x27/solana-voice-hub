@@ -137,6 +137,6 @@ function getTotalUsers() {
 }
 
 // Bind to 0.0.0.0 for LAN access
-server.listen(3000, '0.0.0.0', () => {
-  console.log('[Server v2] Server running on http://localhost:3000 and LAN IP (e.g., http://192.168.1.184:3000)');
+server.listen(process.env.PORT || 3000, '0.0.0.0', () => {
+  console.log(`[Server v2] Server running on port ${process.env.PORT || 3000}`);
 });
