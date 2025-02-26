@@ -18,9 +18,9 @@ io.on('connection', (socket) => {
     socket.join(address);
     const roomUsers = [...io.sockets.adapter.rooms.get(address) || []].map(id => ({
       id,
-      username: id === socket.id ? username : 'User', // Default to 'User' if not the joining socket
-      avatar: id === socket.id ? avatar : 'https://via.placeholder.com/50', // Default avatar
-      peerId: id === socket.id ? peerId : null // Only set peerId for joining user
+      username: id === socket.id ? username : 'User',
+      avatar: id === socket.id ? avatar : 'https://via.placeholder.com/50',
+      peerId: id === socket.id ? peerId : null
     }));
     io.to(address).emit('roomUpdate', { address, users: roomUsers });
     console.log(`[Server v2] Room update sent to ${address}:`, roomUsers);
