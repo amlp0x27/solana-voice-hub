@@ -196,7 +196,6 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      justify-content: space-between;
       padding: 30px;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 15px;
@@ -208,11 +207,11 @@
     #loginScreen .left {
       text-align: center;
       flex: 1;
-      padding-right: 20px;
+      padding-right: 10px; /* Reduced padding for balance */
     }
     #loginScreen .right {
       flex: 2;
-      padding-left: 160px; /* Pushed further right */
+      padding-left: 180px; /* Increased to push Q1-Q4 further right */
     }
     #loginScreen h1 {
       margin-bottom: 10px;
@@ -232,6 +231,7 @@
       color: #00ffcc;
       line-height: 1.6;
       text-shadow: 0 0 5px #00ffcc;
+      margin-top: 10px;
     }
     #loginScreen .goals {
       font-size: 14px;
@@ -240,7 +240,7 @@
       width: 100%;
     }
     #loginScreen .goals li {
-      margin: 5px 0; /* Reduced margin for compactness */
+      margin: 5px 0;
     }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
