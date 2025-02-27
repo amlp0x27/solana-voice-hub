@@ -14,7 +14,26 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      overflow: hidden;
+      position: relative;
     }
+    /* Shooting Stars */
+    @keyframes shootingStar {
+      0% { transform: translateX(0) translateY(0); opacity: 1; }
+      100% { transform: translateX(-100vw) translateY(100vh); opacity: 0; }
+    }
+    .star {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #00ffcc;
+      box-shadow: 0 0 10px #00ffcc;
+      animation: shootingStar 2s linear infinite;
+    }
+    .star:nth-child(1) { top: 10%; left: 80%; animation-delay: 0s; }
+    .star:nth-child(2) { top: 20%; left: 70%; animation-delay: 0.5s; }
+    .star:nth-child(3) { top: 15%; left: 90%; animation-delay: 1s; }
+    .star:nth-child(4) { top: 25%; left: 85%; animation-delay: 1.5s; }
     .container {
       display: flex;
       width: 90%;
@@ -26,15 +45,9 @@
       backdrop-filter: blur(15px);
       animation: fadeIn 1s ease-in;
       position: relative;
+      z-index: 1;
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    #logo {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      width: 80px;
-      height: 80px;
-    }
     .main-content {
       flex: 3;
       padding-right: 20px;
@@ -67,6 +80,7 @@
       background: rgba(0, 0, 0, 0.4);
       color: #fff;
       font-size: 16px;
+      box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
     }
     textarea { height: 100px; resize: none; }
     button, a.button {
@@ -94,8 +108,8 @@
       color: #00ccaa;
     }
     #chatBox {
-      max-height: 200px; /* Fixed height */
-      overflow-y: auto; /* Scrollable */
+      max-height: 200px;
+      overflow-y: auto;
       background: rgba(0, 255, 204, 0.1);
       border-radius: 10px;
       padding: 10px;
@@ -142,7 +156,7 @@
     }
     #voteStatus {
       position: absolute;
-      right: 60px; /* Adjusted to avoid logo */
+      right: 60px;
       top: -5px;
       padding: 5px 10px;
       background: #ff9900;
@@ -173,23 +187,56 @@
       width: 0;
       transition: width 0.1s;
     }
+    #loginScreen {
+      text-align: center;
+      padding: 30px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
+      width: 400px;
+      animation: slideUp 0.8s ease-out;
+    }
+    @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    #loginScreen h1 {
+      margin-bottom: 10px;
+    }
+    #loginScreen p {
+      font-size: 1.2em;
+      color: #00ccaa;
+      margin-bottom: 20px;
+      text-shadow: 0 0 10px #00ccaa;
+    }
+    #loginScreen input {
+      width: 80%;
+      margin: 10px auto;
+    }
+    .home-links {
+      margin-top: 20px;
+    }
+    .home-links a {
+      margin: 0 15px;
+    }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
+      #loginScreen { width: 90%; padding: 20px; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
   <div class="container">
-    <!-- New Logo: "SVH" -->
-    <img id="logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMwMGZmY2MiIHN0cm9rZS13aWR0aD0iNiIvPjxwYXRoIGQ9Ik0gMzUgMjUgQyAzNSAxNSA0NSAxMCA0NSAyNSBMIDQ1IDQ1IEwgNTUgNDUgQyA1NSA0NSA2NSAzNSA2NSAyNSBMIDY1IDc1IiBzdHJva2U9IiMwMGZmY2MiIHN0cm9rZS13aWR0aD0iOCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHRleHQgeD0iNTUiIHk9IjY1IiBmaWxsPSIjMDBmZmNjIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjIwIiBmb250LXdlaWdodD0iYm9sZCI+SDwvdGV4dD48L3N2Zz4=" alt="Solana Voice Hub Logo">
     <div id="loginScreen">
       <h1>Solana Voice Hub</h1>
-      <div style="text-align: center;">
-        <input type="text" id="usernameInput" placeholder="Enter your username" style="display: inline-block; width: 300px;">
-        <br>
-        <button id="loginBtn" style="margin-top: 15px;">Join</button>
+      <p>Join the Future of Crypto Communities</p>
+      <input type="text" id="usernameInput" placeholder="Enter your username">
+      <button id="loginBtn">Join</button>
+      <div class="home-links">
+        <a href="#roadmap" id="docsBtn" class="button">Docs & Roadmap</a>
       </div>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
@@ -508,7 +555,7 @@
           li.textContent = `${msg.username}: ${msg.text}`;
           chatBox.appendChild(li);
         });
-        chatBox.scrollTop = chatBox.scrollHeight; // Ensure scroll to bottom
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
     }
 
