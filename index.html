@@ -43,7 +43,7 @@
       display: flex;
       width: 90%;
       max-width: 1200px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.6); /* Darker purple extended to edges */
       padding: 25px;
       border-radius: 20px;
       box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
@@ -51,6 +51,7 @@
       animation: fadeIn 1s ease-in;
       position: relative;
       z-index: 1;
+      margin: 0 auto; /* Center the container */
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .main-content {
@@ -196,22 +197,33 @@
       display: flex;
       flex-direction: row;
       align-items: center;
+      justify-content: center;
       padding: 30px;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(0, 0, 0, 0.6); /* Dark purple to edge */
       border-radius: 15px;
-      box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-      width: 700px;
+      box-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
+      width: 800px; /* Adjusted width for balance */
       animation: slideUp 0.8s ease-out;
+      position: relative;
     }
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     #loginScreen .left {
-      text-align: center;
+      text-align: left;
       flex: 1;
-      padding-right: 10px; /* Reduced padding for balance */
+      padding-right: 20px;
     }
     #loginScreen .right {
-      flex: 2;
-      padding-left: 180px; /* Increased to push Q1-Q4 further right */
+      flex: 1;
+      padding-left: 50px; /* Adjusted for right alignment */
+      text-align: left;
+    }
+    #loginScreen .center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      width: 100%;
     }
     #loginScreen h1 {
       margin-bottom: 10px;
@@ -246,6 +258,7 @@
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
       #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
+      #loginScreen .center { position: static; transform: none; text-align: center; }
       #loginScreen .right { padding-left: 0; text-align: center; }
     }
   </style>
@@ -265,11 +278,13 @@
   <div class="container">
     <div id="loginScreen">
       <div class="left">
-        <h1>Solana Voice Hub</h1>
         <p>Join the Future of Crypto Communities</p>
+        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
+      </div>
+      <div class="center">
+        <h1>Solana Voice Hub</h1>
         <input type="text" id="usernameInput" placeholder="Enter your username">
         <button id="loginBtn">Join</button>
-        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
       </div>
       <div class="right">
         <ul class="goals">
