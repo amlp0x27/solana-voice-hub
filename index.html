@@ -43,15 +43,15 @@
       display: flex;
       width: 90%;
       max-width: 1200px;
-      background: rgba(0, 0, 0, 0.6); /* Darker purple extended to edges */
-      padding: 25px;
+      background: rgba(0, 0, 0, 0.6); /* Dark purple to edge */
+      padding: 0; /* Removed padding to extend to edges */
       border-radius: 20px;
       box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
       backdrop-filter: blur(15px);
       animation: fadeIn 1s ease-in;
       position: relative;
       z-index: 1;
-      margin: 0 auto; /* Center the container */
+      margin: 0 auto;
     }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .main-content {
@@ -197,14 +197,15 @@
       display: flex;
       flex-direction: row;
       align-items: center;
-      justify-content: center;
+      justify-content: space-between;
       padding: 30px;
-      background: rgba(0, 0, 0, 0.6); /* Dark purple to edge */
+      background: rgba(0, 0, 0, 0.6); /* Dark purple extended */
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
-      width: 800px; /* Adjusted width for balance */
+      width: 90%; /* Extended to match left edge */
+      max-width: 1200px; /* Ensure it scales with container */
+      margin: 0 auto;
       animation: slideUp 0.8s ease-out;
-      position: relative;
     }
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     #loginScreen .left {
@@ -212,18 +213,15 @@
       flex: 1;
       padding-right: 20px;
     }
+    #loginScreen .center {
+      text-align: center;
+      flex: 1;
+      padding: 0 20px;
+    }
     #loginScreen .right {
+      text-align: left;
       flex: 1;
       padding-left: 50px; /* Adjusted for right alignment */
-      text-align: left;
-    }
-    #loginScreen .center {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      width: 100%;
     }
     #loginScreen h1 {
       margin-bottom: 10px;
@@ -243,7 +241,7 @@
       color: #00ffcc;
       line-height: 1.6;
       text-shadow: 0 0 5px #00ffcc;
-      margin-top: 10px;
+      margin-top: 20px; /* Moved downward */
     }
     #loginScreen .goals {
       font-size: 14px;
@@ -258,7 +256,7 @@
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
       #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
-      #loginScreen .center { position: static; transform: none; text-align: center; }
+      #loginScreen .center { padding: 0; }
       #loginScreen .right { padding-left: 0; text-align: center; }
     }
   </style>
@@ -279,7 +277,6 @@
     <div id="loginScreen">
       <div class="left">
         <p>Join the Future of Crypto Communities</p>
-        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
       </div>
       <div class="center">
         <h1>Solana Voice Hub</h1>
@@ -293,6 +290,9 @@
           <li><strong>Growth Q3:</strong> SVH holders get exclusive rewards and epic community events.</li>
           <li><strong>Future Q4:</strong> Mobile app and multi-chain features to dominate crypto engagement!</li>
         </ul>
+      </div>
+      <div class="left">
+        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
       </div>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
