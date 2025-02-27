@@ -193,27 +193,15 @@
       transition: width 0.1s;
     }
     #loginScreen {
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: space-between;
+      text-align: center;
       padding: 30px;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-      width: 600px;
+      width: 400px;
       animation: slideUp 0.8s ease-out;
     }
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    #loginScreen .left {
-      text-align: center;
-      flex: 1;
-    }
-    #loginScreen .right {
-      flex: 1;
-      text-align: left;
-      padding-left: 20px;
-    }
     #loginScreen h1 {
       margin-bottom: 10px;
     }
@@ -230,20 +218,15 @@
     #loginScreen .goals {
       font-size: 14px;
       color: #fff;
+      margin-top: 10px;
     }
     #loginScreen .goals li {
-      margin: 10px 0;
-    }
-    .stats {
-      margin-top: 10px;
-      font-size: 12px;
-      color: #00ccaa;
+      margin: 5px 0;
     }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
-      #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
-      #loginScreen .right { padding-left: 0; text-align: center; }
+      #loginScreen { width: 90%; padding: 20px; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -261,21 +244,16 @@
   <div class="star"></div>
   <div class="container">
     <div id="loginScreen">
-      <div class="left">
-        <h1>Solana Voice Hub</h1>
-        <p>Join the Future of Crypto Communities</p>
-        <input type="text" id="usernameInput" placeholder="Enter your username">
-        <button id="loginBtn">Join</button>
-        <div class="stats">Active Users: <span id="activeUsers">0</span> | Rooms: <span id="activeRooms">0</span></div>
-      </div>
-      <div class="right">
-        <ul class="goals">
-          <li><strong>Launch:</strong> Texting and voice chat now live!</li>
-          <li><strong>In Talks:</strong> Integrations with BullX and Axiom.</li>
-          <li><strong>Rewarding Holders:</strong> Benefits for holding tokens.</li>
-          <li><strong>And More:</strong> Expanding features ahead!</li>
-        </ul>
-      </div>
+      <h1>Solana Voice Hub</h1>
+      <p>Join the Future of Crypto Communities</p>
+      <input type="text" id="usernameInput" placeholder="Enter your username">
+      <button id="loginBtn">Join</button>
+      <ul class="goals">
+        <li><strong>Launch:</strong> Texting and voice chat now live!</li>
+        <li><strong>Next Steps:</strong> In talks with BullX and Axiom for trading and analytics integrations.</li>
+        <li><strong>Growth:</strong> Rewarding holders with benefits and adding token-specific channels.</li>
+        <li><strong>Future:</strong> Expanding with more features, mobile app, and community tools.</li>
+      </ul>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
       <h1>Solana Voice Hub</h1>
@@ -345,8 +323,6 @@
     const backBtn = document.getElementById('backBtn');
     const chatInput = document.getElementById('chatInput');
     const volumeMeter = document.getElementById('volumeMeter').querySelector('div');
-    const activeUsers = document.getElementById('activeUsers');
-    const activeRooms = document.getElementById('activeRooms');
 
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
@@ -472,8 +448,6 @@
       console.log('[Client] Room update:', data);
       document.getElementById('status').textContent = `Connected to ${data.address} - ${data.users.length} in room`;
       document.getElementById('userCount').textContent = `Users Online: ${data.totalUsers}`;
-      activeUsers.textContent = data.totalUsers;
-      activeRooms.textContent = Object.keys(rooms).length || 1;
       updateVoiceUsers(data.users);
       updateChatBox(data.messages);
       updateKickDropdown(data.users);
