@@ -217,6 +217,7 @@
       text-align: left;
       flex: 1;
       padding-right: 20px;
+      position: relative; /* For SVH positioning */
     }
     #loginScreen .center {
       text-align: center;
@@ -246,7 +247,7 @@
       color: #00ffcc;
       line-height: 1.6;
       text-shadow: 0 0 5px #00ffcc;
-      margin-top: 10px; /* Under "Join the Future" */
+      margin-top: 10px;
     }
     #loginScreen .goals {
       font-size: 14px;
@@ -260,18 +261,17 @@
     /* Adjusted SVH animation position */
     .logo-animation {
       position: absolute;
-      top: 10px;
-      left: 50%; /* Centered horizontally */
-      transform: translateX(-50%); /* Centered above "Join the Future" */
+      top: -20px; /* Above "Join the Future" */
+      left: 10px; /* Aligned with left content */
       font-size: 1.5em;
       color: #00ffcc;
       text-shadow: 0 0 10px #00ffcc;
       animation: pulse 2s infinite;
     }
     @keyframes pulse {
-      0% { transform: translateX(-50%) scale(1); }
-      50% { transform: translateX(-50%) scale(1.1); }
-      100% { transform: translateX(-50%) scale(1); }
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
     }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
