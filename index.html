@@ -29,12 +29,17 @@
       position: relative;
     }
     @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      margin-bottom: 20px;
+    }
     #logo {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 120px;
-      height: 120px;
+      width: 80px;
+      height: 80px;
+      margin-right: 15px;
       transition: transform 0.5s;
     }
     #logo:hover { transform: rotate(360deg) scale(1.1); }
@@ -104,8 +109,8 @@
       color: #00ccaa;
     }
     #chatBox {
-      max-height: 300px;
-      overflow-y: auto;
+      max-height: 300px; /* Fixed height */
+      overflow-y: auto; /* Scrollable */
       background: rgba(0, 255, 204, 0.2);
       border-radius: 12px;
       padding: 20px;
@@ -136,6 +141,7 @@
       align-items: center;
       margin: 15px 0;
       cursor: pointer;
+      position: relative;
     }
     #voiceUsers img {
       width: 60px;
@@ -149,6 +155,15 @@
     }
     #voiceUsers img.muted {
       opacity: 0.6;
+    }
+    #voteStatus {
+      position: absolute;
+      right: 60px;
+      top: -5px;
+      padding: 5px 10px;
+      background: #ff9900;
+      border-radius: 5px;
+      font-size: 12px;
     }
     .mute-btn {
       padding: 8px 15px;
@@ -205,15 +220,19 @@
     @media (max-width: 800px) {
       .container { flex-direction: column; padding: 20px; }
       .voice-sidebar { border-left: none; border-top: 3px solid #00ffcc; padding-top: 30px; padding-left: 0; }
-      #logo { width: 80px; height: 80px; top: 10px; right: 10px; }
+      #logo { width: 60px; height: 60px; margin-right: 10px; }
+      .header { flex-direction: column; }
+      h1 { font-size: 2em; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="container">
-    <!-- New Logo: Glowing "S" with Microphone Flair -->
-    <img id="logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwZmZjYyIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtZGFzaGFycmF5PSI1LDUiLz48cGF0aCBkPSJNIDQwIDI1IEMgNDAgMTUgNTAgMTAgNTAgMjUgTCA1MCA3NSBDIDUwIDg1IDQwIDkwIDQwIDc1IiBzdHJva2U9IiMwMGZmY2MiIHN0cm9rZS13aWR0aD0iOCIgZmlsbD0ibm9uZSIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+PHBhdGggZD0iTSAzNSAyNSBMIDY1IDI1IiBzdHJva2U9IiMwMGZmY2MiIHN0cm9rZS13aWR0aD0iNCIvPjxwYXRoIGQ9Ik0gMzUgNzUgTCA2NSA3NSIgc3Ryb2tlPSIjMDBmZmNjIiBzdHJva2Utd2lkdGg9IjQiLz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI2IiBmaWxsPSIjMDBmZmNjIi8+PC9zdmc+" alt="Solana Voice Hub Logo">
+    <div class="header">
+      <img id="logo" src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAiIGhlaWdodD0iODAiIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHg9IjQ1IiB5PSIxNSIgd2lkdGg9IjEwIiBoZWlnaHQ9IjYwIiBmaWxsPSIjMDBmZmNjIiBzdHJva2U9IiMwMGZmY2MiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0gMzUgNzUgTCA2NSA3NSBNIDQwIDcwIEwgNjAgNzAiIHN0cm9rZT0iIzAwZmZjYyIgc3Ryb2tlLXdpZHRoPSI0Ii8+PGNpcmNsZSBjeD0iNTAiIGN5PSI1MCIgcj0iNDUiIGZpbGw9Im5vbmUiIHN0cm9rZT0iIzAwZmZjYyIgc3Ryb2tlLXdpZHRoPSI2IiBzdHJva2UtZGFzaGFycmF5PSI1LDUiLz48L3N2Zz4=" alt="Solana Voice Hub Logo">
+      <h1>Solana Voice Hub</h1>
+    </div>
     <div id="loginScreen">
       <h1>Solana Voice Hub</h1>
       <p>Join the Future of Crypto Communities</p>
@@ -221,7 +240,6 @@
       <button id="loginBtn">Enter the Hub</button>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
-      <h1>Solana Voice Hub</h1>
       <p id="userCount">Users Online: 0</p>
       <div class="input-group">
         <input type="text" id="contractAddress" placeholder="Enter Solana Address (e.g., 4k3D...)">
@@ -442,10 +460,6 @@
         if (!voteSpan) {
           voteSpan = document.createElement('span');
           voteSpan.id = 'voteStatus';
-          voteSpan.style.marginLeft = 'auto';
-          voteSpan.style.padding = '5px 10px';
-          voteSpan.style.background = '#ff9900';
-          voteSpan.style.borderRadius = '5px';
           userItem.appendChild(voteSpan);
         }
         voteSpan.textContent = `${votes}/10 votes`;
@@ -519,7 +533,7 @@
       console.log('[Client] Updating kick dropdown:', users);
       users.forEach(user => {
         const option = document.createElement('option');
-        option.value = user.id; // Use socket.id, not peerId
+        option.value = user.id;
         option.textContent = user.username;
         kickSelect.appendChild(option);
       });
@@ -576,22 +590,24 @@
     async function fetchTokenInfo(address) {
       try {
         const response = await fetch(`https://public-api.solscan.io/token/meta?address=${address}`);
-        if (!response.ok) throw new Error('Token fetch failed');
+        if (!response.ok) throw new Error(`Token fetch failed: ${response.status}`);
         const data = await response.json();
-        document.getElementById('tokenInfo').textContent = data.name ? `${data.name} (${data.symbol || 'N/A'})` : 'Token info unavailable';
+        document.getElementById('tokenInfo').textContent = data.name ? `${data.name} (${data.symbol || 'N/A'})` : 'No token info found';
       } catch (err) {
-        document.getElementById('tokenInfo').textContent = 'Token info unavailable';
+        console.error('[Client] Token info error:', err);
+        document.getElementById('tokenInfo').textContent = 'No token info found - check address';
       }
     }
 
     async function fetchCoinStats(address) {
       try {
         const response = await fetch(`https://api.coingecko.com/api/v3/coins/solana/contract/${address}`);
-        if (!response.ok) throw new Error('Coin stats fetch failed');
+        if (!response.ok) throw new Error(`Coin stats fetch failed: ${response.status}`);
         const data = await response.json();
         document.getElementById('coinStats').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()} | 24h: ${data.market_data.price_change_percentage_24h.toFixed(2)}%`;
       } catch (err) {
-        document.getElementById('coinStats').textContent = 'Stats unavailable';
+        console.error('[Client] Coin stats error:', err);
+        document.getElementById('coinStats').textContent = 'Stats unavailable - check address';
       }
     }
 
