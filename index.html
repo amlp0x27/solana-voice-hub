@@ -43,10 +43,10 @@
       display: flex;
       width: 90%;
       max-width: 1200px;
-      background: rgba(0, 0, 0, 0.6); /* Dark purple to edge */
-      padding: 0; /* Removed padding to extend to edges */
+      background: rgba(0, 0, 0, 0.6);
+      padding: 0;
       border-radius: 20px;
-      box-shadow: 0 0 30px rgba(0, 255, 204, 0.7);
+      box-shadow: 0 0 30px rgba(0, 255, 204, 0.7), 0 0 15px rgba(0, 255, 204, 0.3); /* Enhanced glow */
       backdrop-filter: blur(15px);
       animation: fadeIn 1s ease-in;
       position: relative;
@@ -66,9 +66,10 @@
     h1 {
       text-align: center;
       color: #00ffcc;
-      text-shadow: 0 0 15px #00ffcc;
-      font-size: 2.5em;
-      margin-bottom: 15px;
+      text-shadow: 0 0 20px #00ffcc, 0 0 10px #00ccaa; /* Stronger text glow */
+      font-size: 3em; /* Larger, professional font */
+      margin-bottom: 20px;
+      font-weight: 700;
     }
     #userCount {
       text-align: center;
@@ -82,29 +83,33 @@
       width: 100%;
       padding: 12px;
       border: 2px solid #00ffcc;
-      border-radius: 8px;
-      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px; /* Rounded corners for elegance */
+      background: rgba(0, 0, 0, 0.5);
       color: #fff;
       font-size: 16px;
       box-shadow: 0 0 10px rgba(0, 255, 204, 0.5);
+      transition: box-shadow 0.3s;
+    }
+    input:focus {
+      box-shadow: 0 0 15px #00ffcc;
     }
     textarea { height: 100px; resize: none; }
     button, a.button {
-      padding: 12px 25px;
+      padding: 12px 30px;
       margin: 5px;
       background: linear-gradient(45deg, #00ffcc, #00ccaa);
       color: #0f0c29;
       border: none;
-      border-radius: 8px;
+      border-radius: 10px;
       cursor: pointer;
       font-weight: bold;
       font-size: 16px;
       text-decoration: none;
       display: inline-block;
-      transition: all 0.3s;
+      transition: all 0.3s, transform 0.2s;
     }
     button:hover, a.button:hover {
-      box-shadow: 0 0 20px #00ffcc;
+      box-shadow: 0 0 25px #00ffcc;
       transform: scale(1.05);
     }
     #status, #tokenInfo, #coinStats {
@@ -199,11 +204,11 @@
       align-items: center;
       justify-content: space-between;
       padding: 30px;
-      background: rgba(0, 0, 0, 0.6); /* Dark purple extended */
+      background: rgba(0, 0, 0, 0.6);
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(0, 255, 204, 0.7);
-      width: 90%; /* Extended to match left edge */
-      max-width: 1200px; /* Ensure it scales with container */
+      width: 90%;
+      max-width: 1200px;
       margin: 0 auto;
       animation: slideUp 0.8s ease-out;
     }
@@ -221,15 +226,15 @@
     #loginScreen .right {
       text-align: left;
       flex: 1;
-      padding-left: 50px; /* Adjusted for right alignment */
+      padding-left: 50px;
     }
     #loginScreen h1 {
-      margin-bottom: 10px;
+      margin-bottom: 20px;
     }
     #loginScreen p {
       font-size: 1.2em;
       color: #00ccaa;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
       text-shadow: 0 0 10px #00ccaa;
     }
     #loginScreen input {
@@ -241,7 +246,7 @@
       color: #00ffcc;
       line-height: 1.6;
       text-shadow: 0 0 5px #00ffcc;
-      margin-top: 20px; /* Moved downward */
+      margin-top: 10px; /* Under "Join the Future" */
     }
     #loginScreen .goals {
       font-size: 14px;
@@ -252,12 +257,28 @@
     #loginScreen .goals li {
       margin: 5px 0;
     }
+    /* Spice it up with a subtle animated logo or badge */
+    .logo-animation {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 1.5em;
+      color: #00ffcc;
+      text-shadow: 0 0 10px #00ffcc;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
       #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
       #loginScreen .center { padding: 0; }
       #loginScreen .right { padding-left: 0; text-align: center; }
+      .logo-animation { display: none; } /* Hide animation on mobile */
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -274,9 +295,11 @@
   <div class="star"></div>
   <div class="star"></div>
   <div class="container">
+    <div class="logo-animation">SVH</div> <!-- Subtle animated badge -->
     <div id="loginScreen">
       <div class="left">
         <p>Join the Future of Crypto Communities</p>
+        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
       </div>
       <div class="center">
         <h1>Solana Voice Hub</h1>
@@ -290,9 +313,6 @@
           <li><strong>Growth Q3:</strong> SVH holders get exclusive rewards and epic community events.</li>
           <li><strong>Future Q4:</strong> Mobile app and multi-chain features to dominate crypto engagement!</li>
         </ul>
-      </div>
-      <div class="left">
-        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
       </div>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
