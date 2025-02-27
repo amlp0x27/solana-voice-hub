@@ -17,7 +17,7 @@
       overflow: hidden;
       position: relative;
     }
-    /* Shooting Stars */
+    /* Shooting Stars Across Site */
     @keyframes shootingStar {
       0% { transform: translateX(0) translateY(0); opacity: 1; }
       100% { transform: translateX(-100vw) translateY(100vh); opacity: 0; }
@@ -30,10 +30,14 @@
       box-shadow: 0 0 10px #00ffcc;
       animation: shootingStar 2s linear infinite;
     }
-    .star:nth-child(1) { top: 10%; left: 80%; animation-delay: 0s; }
-    .star:nth-child(2) { top: 20%; left: 70%; animation-delay: 0.5s; }
-    .star:nth-child(3) { top: 15%; left: 90%; animation-delay: 1s; }
-    .star:nth-child(4) { top: 25%; left: 85%; animation-delay: 1.5s; }
+    .star:nth-child(1) { top: 5%; left: 10%; animation-delay: 0s; }
+    .star:nth-child(2) { top: 15%; left: 30%; animation-delay: 0.3s; }
+    .star:nth-child(3) { top: 25%; left: 50%; animation-delay: 0.6s; }
+    .star:nth-child(4) { top: 35%; left: 70%; animation-delay: 0.9s; }
+    .star:nth-child(5) { top: 45%; left: 90%; animation-delay: 1.2s; }
+    .star:nth-child(6) { top: 55%; left: 20%; animation-delay: 1.5s; }
+    .star:nth-child(7) { top: 65%; left: 40%; animation-delay: 1.8s; }
+    .star:nth-child(8) { top: 75%; left: 60%; animation-delay: 2.1s; }
     .container {
       display: flex;
       width: 90%;
@@ -188,15 +192,27 @@
       transition: width 0.1s;
     }
     #loginScreen {
-      text-align: center;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
       padding: 30px;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-      width: 400px;
+      width: 600px;
       animation: slideUp 0.8s ease-out;
     }
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    #loginScreen .left {
+      text-align: center;
+      flex: 1;
+    }
+    #loginScreen .right {
+      flex: 1;
+      text-align: left;
+      padding-left: 20px;
+    }
     #loginScreen h1 {
       margin-bottom: 10px;
     }
@@ -210,16 +226,18 @@
       width: 80%;
       margin: 10px auto;
     }
-    .home-links {
-      margin-top: 20px;
+    #loginScreen .goals {
+      font-size: 14px;
+      color: #fff;
     }
-    .home-links a {
-      margin: 0 15px;
+    #loginScreen .goals li {
+      margin: 10px 0;
     }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
-      #loginScreen { width: 90%; padding: 20px; }
+      #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
+      #loginScreen .right { padding-left: 0; text-align: center; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -229,14 +247,25 @@
   <div class="star"></div>
   <div class="star"></div>
   <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
   <div class="container">
     <div id="loginScreen">
-      <h1>Solana Voice Hub</h1>
-      <p>Join the Future of Crypto Communities</p>
-      <input type="text" id="usernameInput" placeholder="Enter your username">
-      <button id="loginBtn">Join</button>
-      <div class="home-links">
-        <a href="#roadmap" id="docsBtn" class="button">Docs & Roadmap</a>
+      <div class="left">
+        <h1>Solana Voice Hub</h1>
+        <p>Join the Future of Crypto Communities</p>
+        <input type="text" id="usernameInput" placeholder="Enter your username">
+        <button id="loginBtn">Join</button>
+      </div>
+      <div class="right">
+        <ul class="goals">
+          <li><strong>Launch:</strong> Texting and voice chat now live!</li>
+          <li><strong>In Talks:</strong> Integrations with BullX and Axiom.</li>
+          <li><strong>Rewarding Holders:</strong> Benefits for holding tokens.</li>
+          <li><strong>And More:</strong> Expanding features ahead!</li>
+        </ul>
       </div>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
@@ -275,10 +304,10 @@
       <h1>Roadmap & Vision</h1>
       <p>Solana Voice Hub was created to foster vibrant communities around Solana-based coins.</p>
       <ul>
-        <li><strong>Phase 1: Launch (Now)</strong> - Voice and text chat.</li>
-        <li><strong>Phase 2: Integrations (Q2 2025)</strong> - Trading and analytics.</li>
-        <li><strong>Phase 3: Growth (Q3 2025)</strong> - Token channels, badges.</li>
-        <li><strong>Phase 4: Expansion (Q4 2025)</strong> - Multi-chain, mobile app.</li>
+        <li><strong>Phase 1: Launch (Now)</strong> - Fully functional voice and text chat for Solana token communities.</li>
+        <li><strong>Phase 2: Integrations (Q2 2025)</strong> - In talks with BullX and Axiom for trading and analytics.</li>
+        <li><strong>Phase 3: Community Growth (Q3 2025)</strong> - Rewarding holders, token-specific channels, and events.</li>
+        <li><strong>Phase 4: Expansion (Q4 2025)</strong> - More features, mobile app, and advanced tools.</li>
       </ul>
       <button id="backBtn">Back to Chat</button>
     </div>
