@@ -212,7 +212,7 @@
     }
     #loginScreen .right {
       flex: 2;
-      padding-left: 140px; /* Further increased to shift 3/4 right */
+      padding-left: 160px; /* Pushed further right */
     }
     #loginScreen h1 {
       margin-bottom: 10px;
@@ -227,6 +227,12 @@
       width: 80%;
       margin: 10px auto;
     }
+    #loginScreen .left-content {
+      font-size: 14px;
+      color: #00ffcc;
+      line-height: 1.6;
+      text-shadow: 0 0 5px #00ffcc;
+    }
     #loginScreen .goals {
       font-size: 14px;
       color: #fff;
@@ -234,7 +240,7 @@
       width: 100%;
     }
     #loginScreen .goals li {
-      margin: 10px 0;
+      margin: 5px 0; /* Reduced margin for compactness */
     }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
@@ -263,13 +269,14 @@
         <p>Join the Future of Crypto Communities</p>
         <input type="text" id="usernameInput" placeholder="Enter your username">
         <button id="loginBtn">Join</button>
+        <div class="left-content">Powered by Solana’s lightning-fast blockchain, uniting token fans globally!</div>
       </div>
       <div class="right">
         <ul class="goals">
-          <li><strong>Launch Q1:</strong> Experience the groundbreaking debut of Solana Voice Hub, where state-of-the-art voice and text chat are now live, uniting Solana token communities in an unprecedented, dynamic ecosystem!</li>
-          <li><strong>Next Steps Q2:</strong> We’re forging strategic partnerships with industry titans BullX and Axiom, set to integrate cutting-edge trading platforms and advanced analytics, revolutionizing how you engage with crypto markets.</li>
-          <li><strong>Growth Q3:</strong> Unlock a world of rewards for Solana Voice Hub Coin (SVH) holders—exclusive perks, token-specific channels, and electrifying community events designed to amplify engagement and value.</li>
-          <li><strong>Future Vision Q4:</strong> Prepare for an exhilarating expansion with a sleek mobile app, multi-chain compatibility, and a suite of innovative features, positioning Solana Voice Hub as the ultimate nexus for crypto enthusiasts worldwide!</li>
+          <li><strong>Launch Q1:</strong> Solana Voice Hub is live with top-tier voice and text chat, connecting communities now!</li>
+          <li><strong>Next Steps Q2:</strong> Partnering with BullX and Axiom for elite trading and analytics tools.</li>
+          <li><strong>Growth Q3:</strong> SVH holders get exclusive rewards and epic community events.</li>
+          <li><strong>Future Q4:</strong> Mobile app and multi-chain features to dominate crypto engagement!</li>
         </ul>
       </div>
     </div>
