@@ -3,7 +3,7 @@ const { Server } = require('socket.io');
 const { ExpressPeerServer } = require('peer');
 const app = express();
 const server = app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
-  console.log(`[Server v8] Server running on port ${process.env.PORT || 3000}`);
+  console.log(`[Server v9] Server running on port ${process.env.PORT || 3000}`);
 });
 const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.static(__dirname));
@@ -12,6 +12,7 @@ app.use('/peerjs', peerServer);
 
 const rooms = {};
 const profanityList = ['damn', 'hell', 'ass', 'fuck', 'shit', 'bitch', 'cunt', 'bastard'];
+const messageCooldowns = new Map(); // Track last message time per socket
 
 function filterText(text) {
   let cleaned = text;
@@ -23,26 +24,25 @@ function filterText(text) {
 }
 
 io.on('connection', (socket) => {
-  console.log(`[Server v8] User connected: ${socket.id}`);
+  console.log(`[Server v9] User connected: ${socket.id}`);
 
   socket.on('userConnected', ({ peerId, username, avatar }) => {
     socket.username = filterText(username);
     socket.avatar = avatar;
     socket.peerId = peerId;
-    console.log(`[Server v8] User ${socket.username} connected with peerId: ${peerId}`);
+    console.log(`[Server v9] User ${socket.username} connected with peerId: ${peerId}`);
     io.emit('roomUpdate', { totalUsers: io.engine.clientsCount, users: [], messages: [] });
   });
 
   socket.on('joinRoom', ({ address, peerId, avatar, username }) => {
-    console.log(`[Server v8] Join: ${address}, peerId: ${peerId}, username: ${username}`);
+    console.log(`[Server v9] Join: ${address}, peerId: ${peerId}, username: ${username}`);
     socket.join(address);
     socket.address = address;
 
     if (!rooms[address]) rooms[address] = { users: [], messages: [], typing: [] };
     const cleanUsername = filterText(username);
-    // Check for existing user with same peerId or username, but don’t kick—just update
     const user = { id: socket.id, username: cleanUsername, avatar, peerId, muted: false };
-    rooms[address].users = rooms[address].users.filter(u => u.peerId !== peerId); // Remove old peerId instance
+    rooms[address].users = rooms[address].users.filter(u => u.peerId !== peerId);
     rooms[address].users.push(user);
 
     const roomData = {
@@ -53,15 +53,22 @@ io.on('connection', (socket) => {
     };
     io.to(address).emit('roomUpdate', roomData);
     io.to(address).emit('userJoined', { id: socket.id, avatar, username: cleanUsername });
-    console.log(`[Server v8] Room ${address} updated:`, roomData);
+    console.log(`[Server v9] Room ${address} updated:`, roomData);
   });
 
   socket.on('chatMessage', ({ address, message, username }) => {
+    const now = Date.now();
+    const lastMessageTime = messageCooldowns.get(socket.id) || 0;
+    if (now - lastMessageTime < 5000) { // 5-second cooldown
+      socket.emit('messageCooldown', 'Please wait 5 seconds between messages.');
+      return;
+    }
     const cleanMessage = filterText(message);
     if (rooms[address]) {
-      rooms[address].messages.push({ username, text: cleanMessage, timestamp: Date.now() });
+      rooms[address].messages.push({ username, text: cleanMessage, timestamp: now });
       io.to(address).emit('newMessage', rooms[address].messages);
-      console.log(`[Server v8] Message in ${address}: ${username}: ${cleanMessage}`);
+      messageCooldowns.set(socket.id, now);
+      console.log(`[Server v9] Message in ${address}: ${username}: ${cleanMessage}`);
     }
   });
 
@@ -119,9 +126,9 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`[Server v8] User disconnected: ${socket.id}`);
+    console.log(`[Server v9] User disconnected: ${socket.id}`);
     if (socket.address && rooms[socket.address]) {
-      rooms[address].users = rooms[address].users.filter(u => u.id !== socket.id);
+      rooms[socket.address].users = rooms[socket.address].users.filter(u => u.id !== socket.id);
       io.to(socket.address).emit('userLeft', socket.id);
       io.to(socket.address).emit('roomUpdate', {
         address: socket.address,
@@ -131,5 +138,6 @@ io.on('connection', (socket) => {
       });
     }
     io.emit('roomUpdate', { totalUsers: io.engine.clientsCount });
+    messageCooldowns.delete(socket.id);
   });
 });
