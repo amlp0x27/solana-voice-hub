@@ -17,7 +17,6 @@
       overflow: hidden;
       position: relative;
     }
-    /* Shooting Stars Across Site */
     @keyframes shootingStar {
       0% { transform: translateX(0) translateY(0); opacity: 1; }
       100% { transform: translateX(-100vw) translateY(100vh); opacity: 0; }
@@ -31,13 +30,15 @@
       animation: shootingStar 2s linear infinite;
     }
     .star:nth-child(1) { top: 5%; left: 10%; animation-delay: 0s; }
-    .star:nth-child(2) { top: 15%; left: 30%; animation-delay: 0.3s; }
-    .star:nth-child(3) { top: 25%; left: 50%; animation-delay: 0.6s; }
-    .star:nth-child(4) { top: 35%; left: 70%; animation-delay: 0.9s; }
-    .star:nth-child(5) { top: 45%; left: 90%; animation-delay: 1.2s; }
-    .star:nth-child(6) { top: 55%; left: 20%; animation-delay: 1.5s; }
-    .star:nth-child(7) { top: 65%; left: 40%; animation-delay: 1.8s; }
-    .star:nth-child(8) { top: 75%; left: 60%; animation-delay: 2.1s; }
+    .star:nth-child(2) { top: 15%; left: 25%; animation-delay: 0.3s; }
+    .star:nth-child(3) { top: 20%; left: 40%; animation-delay: 0.6s; }
+    .star:nth-child(4) { top: 30%; left: 55%; animation-delay: 0.9s; }
+    .star:nth-child(5) { top: 40%; left: 70%; animation-delay: 1.2s; }
+    .star:nth-child(6) { top: 50%; left: 85%; animation-delay: 1.5s; }
+    .star:nth-child(7) { top: 60%; left: 15%; animation-delay: 1.8s; }
+    .star:nth-child(8) { top: 70%; left: 30%; animation-delay: 2.1s; }
+    .star:nth-child(9) { top: 80%; left: 45%; animation-delay: 2.4s; }
+    .star:nth-child(10) { top: 90%; left: 60%; animation-delay: 2.7s; }
     .container {
       display: flex;
       width: 90%;
@@ -233,6 +234,11 @@
     #loginScreen .goals li {
       margin: 10px 0;
     }
+    .stats {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #00ccaa;
+    }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
@@ -251,6 +257,8 @@
   <div class="star"></div>
   <div class="star"></div>
   <div class="star"></div>
+  <div class="star"></div>
+  <div class="star"></div>
   <div class="container">
     <div id="loginScreen">
       <div class="left">
@@ -258,6 +266,7 @@
         <p>Join the Future of Crypto Communities</p>
         <input type="text" id="usernameInput" placeholder="Enter your username">
         <button id="loginBtn">Join</button>
+        <div class="stats">Active Users: <span id="activeUsers">0</span> | Rooms: <span id="activeRooms">0</span></div>
       </div>
       <div class="right">
         <ul class="goals">
@@ -272,7 +281,7 @@
       <h1>Solana Voice Hub</h1>
       <p id="userCount">Users Online: 0</p>
       <div class="input-group">
-        <input type="text" id="contractAddress" placeholder="Enter Solana Address (e.g., 4k3D...)">
+        <input type="text" id="contractAddress" placeholder="Enter Solana Address (e.g., SRMu...)">
         <button id="joinBtn">Join Voice Chat</button>
         <button id="leaveBtn" style="display:none;">Leave Room</button>
         <button id="muteBtn" style="display:none;">Mute</button>
@@ -336,6 +345,8 @@
     const backBtn = document.getElementById('backBtn');
     const chatInput = document.getElementById('chatInput');
     const volumeMeter = document.getElementById('volumeMeter').querySelector('div');
+    const activeUsers = document.getElementById('activeUsers');
+    const activeRooms = document.getElementById('activeRooms');
 
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
@@ -461,6 +472,8 @@
       console.log('[Client] Room update:', data);
       document.getElementById('status').textContent = `Connected to ${data.address} - ${data.users.length} in room`;
       document.getElementById('userCount').textContent = `Users Online: ${data.totalUsers}`;
+      activeUsers.textContent = data.totalUsers;
+      activeRooms.textContent = Object.keys(rooms).length || 1;
       updateVoiceUsers(data.users);
       updateChatBox(data.messages);
       updateKickDropdown(data.users);
@@ -482,7 +495,7 @@
       document.getElementById('status').textContent += ` - User kicked!`;
     });
 
-    socket.on('voteUpdate', ({ targetId, votes }) => {
+    socket.on('voteUpdate', ({ targetId, votes, message }) => {
       const userItem = document.querySelector(`#voiceUsers li[data-id="${targetId}"]`);
       if (userItem) {
         let voteSpan = userItem.querySelector('#voteStatus');
@@ -491,7 +504,7 @@
           voteSpan.id = 'voteStatus';
           userItem.appendChild(voteSpan);
         }
-        voteSpan.textContent = `${votes}/10 votes`;
+        voteSpan.textContent = `${message} (${votes}/10)`;
       }
     });
 
@@ -634,10 +647,10 @@
         const response = await fetch(`https://public-api.solscan.io/token/meta?address=${address}`);
         if (!response.ok) throw new Error(`Token fetch failed: ${response.status}`);
         const data = await response.json();
-        document.getElementById('tokenInfo').textContent = data.name ? `${data.name} (${data.symbol || 'N/A'})` : 'No token info found';
+        document.getElementById('tokenInfo').textContent = data.name ? `${data.name} (${data.symbol || 'N/A'})` : 'No token info - verify address';
       } catch (err) {
         console.error('[Client] Token info error:', err);
-        document.getElementById('tokenInfo').textContent = 'No token info found - check address';
+        document.getElementById('tokenInfo').textContent = 'No token info - verify address';
       }
     }
 
@@ -649,7 +662,7 @@
         document.getElementById('coinStats').textContent = `Market Cap: $${data.market_data.market_cap.usd.toLocaleString()} | 24h: ${data.market_data.price_change_percentage_24h.toFixed(2)}%`;
       } catch (err) {
         console.error('[Client] Coin stats error:', err);
-        document.getElementById('coinStats').textContent = 'Stats unavailable - check address';
+        document.getElementById('coinStats').textContent = 'Stats unavailable - verify address';
       }
     }
 
