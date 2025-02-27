@@ -3,7 +3,7 @@ const { Server } = require('socket.io');
 const { ExpressPeerServer } = require('peer');
 const app = express();
 const server = app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
-  console.log(`[Server v9] Server running on port ${process.env.PORT || 3000}`);
+  console.log(`[Server v10] Server running on port ${process.env.PORT || 3000}`);
 });
 const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.static(__dirname));
@@ -12,7 +12,8 @@ app.use('/peerjs', peerServer);
 
 const rooms = {};
 const profanityList = ['damn', 'hell', 'ass', 'fuck', 'shit', 'bitch', 'cunt', 'bastard'];
-const messageCooldowns = new Map(); // Track last message time per socket
+const messageCooldowns = new Map();
+const voteKickRecords = new Map(); // Track voters per target
 
 function filterText(text) {
   let cleaned = text;
@@ -24,22 +25,22 @@ function filterText(text) {
 }
 
 io.on('connection', (socket) => {
-  console.log(`[Server v9] User connected: ${socket.id}`);
+  console.log(`[Server v10] User connected: ${socket.id}`);
 
   socket.on('userConnected', ({ peerId, username, avatar }) => {
     socket.username = filterText(username);
     socket.avatar = avatar;
     socket.peerId = peerId;
-    console.log(`[Server v9] User ${socket.username} connected with peerId: ${peerId}`);
+    console.log(`[Server v10] User ${socket.username} connected with peerId: ${peerId}`);
     io.emit('roomUpdate', { totalUsers: io.engine.clientsCount, users: [], messages: [] });
   });
 
   socket.on('joinRoom', ({ address, peerId, avatar, username }) => {
-    console.log(`[Server v9] Join: ${address}, peerId: ${peerId}, username: ${username}`);
+    console.log(`[Server v10] Join: ${address}, peerId: ${peerId}, username: ${username}`);
     socket.join(address);
     socket.address = address;
 
-    if (!rooms[address]) rooms[address] = { users: [], messages: [], typing: [] };
+    if (!rooms[address]) rooms[address] = { users: [], messages: [], typing: [], votes: {} };
     const cleanUsername = filterText(username);
     const user = { id: socket.id, username: cleanUsername, avatar, peerId, muted: false };
     rooms[address].users = rooms[address].users.filter(u => u.peerId !== peerId);
@@ -53,13 +54,13 @@ io.on('connection', (socket) => {
     };
     io.to(address).emit('roomUpdate', roomData);
     io.to(address).emit('userJoined', { id: socket.id, avatar, username: cleanUsername });
-    console.log(`[Server v9] Room ${address} updated:`, roomData);
+    console.log(`[Server v10] Room ${address} updated:`, roomData);
   });
 
   socket.on('chatMessage', ({ address, message, username }) => {
     const now = Date.now();
     const lastMessageTime = messageCooldowns.get(socket.id) || 0;
-    if (now - lastMessageTime < 5000) { // 5-second cooldown
+    if (now - lastMessageTime < 5000) {
       socket.emit('messageCooldown', 'Please wait 5 seconds between messages.');
       return;
     }
@@ -68,7 +69,7 @@ io.on('connection', (socket) => {
       rooms[address].messages.push({ username, text: cleanMessage, timestamp: now });
       io.to(address).emit('newMessage', rooms[address].messages);
       messageCooldowns.set(socket.id, now);
-      console.log(`[Server v9] Message in ${address}: ${username}: ${cleanMessage}`);
+      console.log(`[Server v10] Message in ${address}: ${username}: ${cleanMessage}`);
     }
   });
 
@@ -98,10 +99,25 @@ io.on('connection', (socket) => {
 
   socket.on('voteKick', ({ address, targetId }) => {
     if (rooms[address]) {
-      rooms[address].votes = rooms[address].votes || {};
-      rooms[address].votes[targetId] = (rooms[address].votes[targetId] || 0) + 1;
-      io.to(address).emit('voteUpdate', { targetId, votes: rooms[address].votes[targetId] });
-      if (rooms[address].votes[targetId] >= 10) {
+      const voterId = socket.id;
+      const targetUser = rooms[address].users.find(u => u.id === targetId);
+      if (!targetUser) return;
+
+      rooms[address].votes[targetId] = rooms[address].votes[targetId] || new Set();
+      const votes = rooms[address].votes[targetId];
+      
+      if (votes.has(voterId)) return; // No duplicate votes
+      votes.add(voterId);
+
+      const voterName = socket.username;
+      const targetName = targetUser.username;
+      io.to(address).emit('voteUpdate', { 
+        targetId, 
+        votes: votes.size, 
+        message: `${voterName} is kicking ${targetName}` 
+      });
+
+      if (votes.size >= 10) {
         io.to(address).emit('userKicked', targetId);
         const socketToKick = io.sockets.sockets.get(targetId);
         if (socketToKick) socketToKick.disconnect(true);
@@ -126,7 +142,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`[Server v9] User disconnected: ${socket.id}`);
+    console.log(`[Server v10] User disconnected: ${socket.id}`);
     if (socket.address && rooms[socket.address]) {
       rooms[socket.address].users = rooms[socket.address].users.filter(u => u.id !== socket.id);
       io.to(socket.address).emit('userLeft', socket.id);
