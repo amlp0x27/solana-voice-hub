@@ -14,7 +14,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow-x: hidden;
+      overflow: hidden;
       position: relative;
     }
     @keyframes shootingStar {
@@ -193,15 +193,28 @@
       transition: width 0.1s;
     }
     #loginScreen {
-      text-align: center;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
       padding: 30px;
       background: rgba(0, 0, 0, 0.4);
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-      width: 400px;
+      width: 600px;
       animation: slideUp 0.8s ease-out;
     }
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    #loginScreen .left {
+      text-align: center;
+      flex: 1;
+      padding-right: 20px;
+    }
+    #loginScreen .right {
+      flex: 1;
+      text-align: left;
+      padding-left: 20px;
+    }
     #loginScreen h1 {
       margin-bottom: 10px;
     }
@@ -218,10 +231,6 @@
     #loginScreen .goals {
       font-size: 14px;
       color: #fff;
-      text-align: left;
-      max-height: 200px;
-      overflow-y: auto;
-      padding-right: 10px;
     }
     #loginScreen .goals li {
       margin: 10px 0;
@@ -229,7 +238,8 @@
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
-      #loginScreen { width: 90%; padding: 20px; }
+      #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
+      #loginScreen .right { padding-left: 0; text-align: center; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -247,16 +257,20 @@
   <div class="star"></div>
   <div class="container">
     <div id="loginScreen">
-      <h1>Solana Voice Hub</h1>
-      <p>Join the Future of Crypto Communities</p>
-      <input type="text" id="usernameInput" placeholder="Enter your username">
-      <button id="loginBtn">Join</button>
-      <ul class="goals">
-        <li><strong>Launch:</strong> Our platform is live with cutting-edge voice and text chat, connecting Solana token communities worldwide.</li>
-        <li><strong>Next Steps:</strong> We’re in discussions with BullX and Axiom to integrate advanced trading tools and real-time analytics, enhancing your crypto experience.</li>
-        <li><strong>Growth:</strong> Introducing rewards for Solana Voice Hub Coin (SVH) holders—exclusive perks, token-specific channels, and community events to drive engagement.</li>
-        <li><strong>Future Vision:</strong> Expanding with a mobile app, multi-chain support, and innovative features to make Solana Voice Hub the ultimate hub for crypto enthusiasts.</li>
-      </ul>
+      <div class="left">
+        <h1>Solana Voice Hub</h1>
+        <p>Join the Future of Crypto Communities</p>
+        <input type="text" id="usernameInput" placeholder="Enter your username">
+        <button id="loginBtn">Join</button>
+      </div>
+      <div class="right">
+        <ul class="goals">
+          <li><strong>Launch Q1:</strong> Texting and voice chat now live!</li>
+          <li><strong>Next Steps Q2:</strong> In talks with BullX and Axiom.</li>
+          <li><strong>Growth Q3:</strong> Rewarding holders and more.</li>
+          <li><strong>Future Vision Q4:</strong> Expanding features ahead!</li>
+        </ul>
+      </div>
     </div>
     <div id="chatScreen" style="display:none;" class="main-content">
       <h1>Solana Voice Hub</h1>
