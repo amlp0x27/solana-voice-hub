@@ -201,7 +201,7 @@
       background: rgba(0, 0, 0, 0.4);
       border-radius: 15px;
       box-shadow: 0 0 20px rgba(0, 255, 204, 0.5);
-      width: 900px; /* Widened to fit horizontal layout */
+      width: 700px;
       animation: slideUp 0.8s ease-out;
     }
     @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
@@ -211,8 +211,10 @@
       padding-right: 20px;
     }
     #loginScreen .right {
-      flex: 3;
+      flex: 2;
       padding-left: 20px;
+      display: flex;
+      justify-content: flex-end;
     }
     #loginScreen h1 {
       margin-bottom: 10px;
@@ -228,25 +230,19 @@
       margin: 10px auto;
     }
     #loginScreen .goals {
-      display: flex;
-      flex-direction: row;
-      justify-content: space-between;
-      font-size: 12px;
+      font-size: 14px;
       color: #fff;
-      line-height: 1.4;
+      line-height: 1.6;
+      width: 100%;
     }
     #loginScreen .goals li {
-      flex: 1;
-      margin: 0 5px;
-      text-align: center;
+      margin: 10px 0;
     }
     @media (max-width: 800px) {
       .container { flex-direction: column; }
       .voice-sidebar { border-left: none; border-top: 2px solid #00ffcc; padding-top: 20px; padding-left: 0; }
       #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
-      #loginScreen .right { padding-left: 0; }
-      #loginScreen .goals { flex-direction: column; text-align: center; }
-      #loginScreen .goals li { margin: 10px 0; }
+      #loginScreen .right { padding-left: 0; text-align: center; justify-content: center; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
