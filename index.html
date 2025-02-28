@@ -367,21 +367,21 @@
     </div>
   </div>
 
-  <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
+  <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
     const deviceId = Math.random().toString(36).substring(2);
     const socket = io('https://solana-voice-hub-node.onrender.com', { 
       reconnection: true,
-      reconnectionAttempts: 3, // Fewer retries
-      reconnectionDelay: 200,  // Faster retries
+      reconnectionAttempts: 5,
+      reconnectionDelay: 500,
       forceNew: true,
       query: { deviceId },
-      transports: ['polling'], // Match server
-      timeout: 3000           // Shorter timeout
+      transports: ['polling'],
+      timeout: 10000 // Longer timeout for Render
     });
     let peer = new Peer({
-      host: '0.peerjs.com', // Public server since Render’s PeerJS failed
+      host: '0.peerjs.com',
       port: 443,
       secure: true,
       debug: 2
