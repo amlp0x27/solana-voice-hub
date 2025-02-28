@@ -3,7 +3,7 @@ const { Server } = require('socket.io');
 const { ExpressPeerServer } = require('peer');
 const app = express();
 const server = app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
-  console.log(`[Server v11] Server running on port ${process.env.PORT || 3000}`);
+  console.log(`[Server v12] Server running on port ${process.env.PORT || 3000}`);
 });
 const io = new Server(server, { cors: { origin: '*' } });
 app.use(express.static(__dirname));
@@ -25,25 +25,26 @@ function filterText(text) {
 }
 
 io.on('connection', (socket) => {
-  console.log(`[Server v11] User connected: ${socket.id}`);
+  console.log(`[Server v12] User connected: ${socket.id}`);
 
   socket.on('userConnected', ({ peerId, username, avatar }) => {
     socket.username = filterText(username);
     socket.avatar = avatar;
     socket.peerId = peerId;
-    console.log(`[Server v11] User ${socket.username} connected with peerId: ${peerId}`);
+    console.log(`[Server v12] User ${socket.username} connected with peerId: ${peerId}, socket: ${socket.id}`);
     io.emit('roomUpdate', { totalUsers: io.engine.clientsCount, users: [], messages: [] });
   });
 
   socket.on('joinRoom', ({ address, peerId, avatar, username }) => {
-    console.log(`[Server v11] Join: ${address}, peerId: ${peerId}, username: ${username}`);
+    console.log(`[Server v12] Join: ${address}, peerId: ${peerId}, username: ${username}, socket: ${socket.id}`);
     socket.join(address);
     socket.address = address;
 
     if (!rooms[address]) rooms[address] = { users: [], messages: [], typing: [], votes: {} };
     const cleanUsername = filterText(username);
     const user = { id: socket.id, username: cleanUsername, avatar, peerId, muted: false };
-    rooms[address].users = rooms[address].users.filter(u => u.peerId !== peerId);
+    // Remove the filter by peerId to allow multiple connections per username
+    // rooms[address].users = rooms[address].users.filter(u => u.peerId !== peerId); // Removed this line
     rooms[address].users.push(user);
 
     const roomData = {
@@ -54,7 +55,7 @@ io.on('connection', (socket) => {
     };
     io.to(address).emit('roomUpdate', roomData);
     io.to(address).emit('userJoined', { id: socket.id, avatar, username: cleanUsername });
-    console.log(`[Server v11] Room ${address} updated:`, roomData);
+    console.log(`[Server v12] Room ${address} updated:`, roomData);
   });
 
   socket.on('chatMessage', ({ address, message, username }) => {
@@ -69,13 +70,13 @@ io.on('connection', (socket) => {
       rooms[address].messages.push({ username, text: cleanMessage, timestamp: now });
       io.to(address).emit('newMessage', rooms[address].messages);
       messageCooldowns.set(socket.id, now);
-      console.log(`[Server v11] Message in ${address}: ${username}: ${cleanMessage}`);
+      console.log(`[Server v12] Message in ${address}: ${username}: ${cleanMessage}`);
     }
   });
 
   socket.on('typing', ({ address, username }) => {
     if (rooms[address]) {
-      rooms[address].typing = [username];
+      rooms[address].typing = [username]; // Consider allowing multiple typers if needed
       io.to(address).emit('typingUpdate', rooms[address].typing);
     }
   });
@@ -123,13 +124,19 @@ io.on('connection', (socket) => {
         if (socketToKick) socketToKick.disconnect(true);
         rooms[address].users = rooms[address].users.filter(u => u.id !== targetId);
         delete rooms[address].votes[targetId];
+        io.to(address).emit('roomUpdate', {
+          address,
+          users: rooms[address].users,
+          messages: rooms[address].messages,
+          totalUsers: io.engine.clientsCount
+        });
       }
     }
   });
 
   socket.on('leaveRoom', ({ address, peerId }) => {
     if (rooms[address]) {
-      rooms[address].users = rooms[address].users.filter(u => u.peerId !== peerId);
+      rooms[address].users = rooms[address].users.filter(u => u.id !== socket.id); // Use socket.id instead of peerId
       io.to(address).emit('userLeft', socket.id);
       io.to(address).emit('roomUpdate', {
         address,
@@ -142,7 +149,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('disconnect', () => {
-    console.log(`[Server v11] User disconnected: ${socket.id}`);
+    console.log(`[Server v12] User disconnected: ${socket.id}`);
     if (socket.address && rooms[socket.address]) {
       rooms[socket.address].users = rooms[socket.address].users.filter(u => u.id !== socket.id);
       io.to(socket.address).emit('userLeft', socket.id);
@@ -152,6 +159,7 @@ io.on('connection', (socket) => {
         messages: rooms[socket.address].messages,
         totalUsers: io.engine.clientsCount
       });
+      if (rooms[socket.address].users.length === 0) delete rooms[socket.address];
     }
     io.emit('roomUpdate', { totalUsers: io.engine.clientsCount });
     messageCooldowns.delete(socket.id);
