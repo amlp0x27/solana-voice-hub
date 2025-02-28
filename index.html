@@ -421,8 +421,8 @@
     });
     peer.on('error', err => {
       console.error('[Client] PeerJS error:', err);
-      if (err.type === 'network' || err.type === 'server-disconnected') {
-        console.log('[Client] Reconnecting PeerJS...');
+      document.getElementById('status').textContent = 'Voice service error - retrying...';
+      setTimeout(() => {
         peer.destroy();
         peer = new Peer({
           host: 'solana-voice-hub-node.onrender.com',
@@ -430,7 +430,7 @@
           secure: true,
           debug: 2
         });
-      }
+      }, 2000);
     });
 
     socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
@@ -484,10 +484,16 @@
         document.getElementById('status').textContent = 'Invalid Solana address!';
         return;
       }
+      console.log('[Client] Attempting to join room:', address, 'PeerJS ID:', peer.id);
       if (!peer.id) {
-        console.log('[Client] PeerJS not ready, waiting...');
         document.getElementById('status').textContent = 'Connecting to voice service...';
+        console.log('[Client] PeerJS not ready, waiting up to 5 seconds...');
+        let timeout = setTimeout(() => {
+          console.error('[Client] PeerJS failed to connect within 5 seconds');
+          document.getElementById('status').textContent = 'Voice service unavailable - please try again.';
+        }, 5000);
         peer.on('open', id => {
+          clearTimeout(timeout);
           console.log('[Client] PeerJS connected with ID:', id);
           doJoinRoom();
         });
