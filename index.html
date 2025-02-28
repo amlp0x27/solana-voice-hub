@@ -326,7 +326,7 @@
       <h1>Solana Voice Hub</h1>
       <p id="userCount">Users Online: 0</p>
       <div class="input-group">
-        <input type="text" id="contractAddress" placeholder="Enter Solana Address (e.g., SRMu...)">
+        <input type="text" id="contractAddress" placeholder="Enter Solana Address (e.g., 4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R)" value="4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R">
         <button id="joinBtn">Join Voice Chat</button>
         <button id="leaveBtn" style="display:none;">Leave Room</button>
         <button id="muteBtn" style="display:none;">Mute</button>
@@ -377,7 +377,7 @@
       reconnectionDelay: 1000,
       forceNew: true, 
       query: { deviceId },
-      transports: ['polling'] // Force polling to avoid WebSocket issues
+      transports: ['polling']
     });
     let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
@@ -437,7 +437,7 @@
 
     socket.on('connect', () => {
       console.log('[Client] Socket connected:', socket.id);
-      if (hasJoined) joinRoom(); // Rejoin if connection drops
+      if (hasJoined) joinRoom();
     });
     socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
     socket.on('disconnect', () => {
@@ -557,7 +557,7 @@
 
     socket.on('roomUpdate', data => {
       console.log('[Client] Room update:', JSON.stringify(data, null, 2));
-      document.getElementById('status').textContent = `Connected to ${data.address} - ${data.users.length} in room`;
+      document.getElementById('status').textContent = data.address ? `Connected to ${data.address} - ${data.users.length} in room` : 'Users Online: ' + data.totalUsers;
       document.getElementById('userCount').textContent = `Users Online: ${data.totalUsers}`;
       updateVoiceUsers(data.users);
       updateChatBox(data.messages);
@@ -615,9 +615,8 @@
 
     function updateVoiceUsers(users) {
       const voiceUsers = document.getElementById('voiceUsers');
-      voiceUsers.innerHTML = ''; // Clear and rebuild
+      voiceUsers.innerHTML = '';
       console.log('[Client] Updating voice users:', users.map(u => `${u.username} (${u.id})`));
-
       users.forEach(user => {
         const li = document.createElement('li');
         li.dataset.id = user.id;
