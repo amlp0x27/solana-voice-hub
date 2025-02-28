@@ -112,6 +112,10 @@
       box-shadow: 0 0 25px #00ffcc;
       transform: scale(1.05);
     }
+    button:disabled {
+      background: #666;
+      cursor: not-allowed;
+    }
     #status, #tokenInfo, #coinStats {
       margin: 10px 0;
       font-size: 18px;
@@ -366,7 +370,11 @@
   <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
-    const socket = io('https://solana-voice-hub-node.onrender.com', { reconnection: true, forceNew: true });
+    const socket = io('https://solana-voice-hub-node.onrender.com', { 
+      reconnection: true, 
+      forceNew: true, 
+      query: { deviceId: Math.random().toString(36).substring(2) } // Unique device identifier
+    });
     let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
       path: '/peerjs',
@@ -375,6 +383,7 @@
     });
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
     let typingTimeout, mutedUsers = {}, lastMessageTime = 0, peerCalls = {};
+    let hasJoined = false; // Track join state
 
     const loginBtn = document.getElementById('loginBtn');
     const joinBtn = document.getElementById('joinBtn');
@@ -423,6 +432,10 @@
 
     socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
     socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
+    socket.on('disconnect', () => {
+      console.log('[Client] Socket disconnected:', socket.id);
+      if (address) leaveRoom(); // Ensure UI reflects disconnection
+    });
 
     loginBtn.onclick = () => {
       username = document.getElementById('usernameInput').value.trim();
@@ -434,6 +447,10 @@
     };
 
     joinBtn.onclick = () => {
+      if (hasJoined) {
+        console.log('[Client] Already joined, ignoring click');
+        return;
+      }
       console.log('[Client] Join button clicked, Socket ID:', socket.id, 'PeerJS ID:', peer.id);
       joinRoom();
     };
@@ -481,6 +498,8 @@
       document.getElementById('sendMsgBtn').style.display = 'inline';
       document.getElementById('chatBox').style.display = 'block';
       document.getElementById('typingIndicator').style.display = 'block';
+      joinBtn.disabled = true; // Disable join button
+      hasJoined = true;
       fetchTokenInfo(address);
       fetchCoinStats(address);
     }
@@ -500,6 +519,8 @@
       document.getElementById('sendMsgBtn').style.display = 'none';
       document.getElementById('chatBox').style.display = 'none';
       document.getElementById('typingIndicator').style.display = 'none';
+      joinBtn.disabled = false; // Re-enable join button
+      hasJoined = false;
       address = null;
       mutedUsers = {};
       Object.values(peerCalls).forEach(call => call.close());
