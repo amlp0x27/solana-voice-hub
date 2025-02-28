@@ -280,6 +280,10 @@
       #loginScreen .right { padding-left: 0; text-align: center; }
       .logo-animation { display: none; }
     }
+    /* Hide chat elements by default */
+    #chatInput, #sendMsgBtn, #chatBox, #typingIndicator {
+      display: none;
+    }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -431,13 +435,10 @@
     };
 
     joinBtn.onclick = () => {
-      if (!peer.id) {
-        console.log('[Client] PeerJS not ready, waiting...');
-        peer.on('open', () => joinRoom());
-      } else {
-        joinRoom();
-      }
+      console.log('[Client] Join button clicked');
+      joinRoom();
     };
+
     leaveBtn.onclick = leaveRoom;
     muteBtn.onclick = toggleMute;
     sendMsgBtn.onclick = sendMessage;
@@ -472,11 +473,28 @@
         document.getElementById('status').textContent = 'Invalid Solana address!';
         return;
       }
+      if (!peer.id) {
+        console.log('[Client] PeerJS not ready yet');
+        document.getElementById('status').textContent = 'Connecting to voice service...';
+        peer.once('open', () => {
+          console.log('[Client] PeerJS ready, joining room:', address);
+          doJoinRoom();
+        });
+      } else {
+        doJoinRoom();
+      }
+    }
+
+    function doJoinRoom() {
       console.log('[Client] Joining room:', address, 'with peerId:', peer.id);
       socket.emit('joinRoom', { address, peerId: peer.id, avatar, username });
       document.getElementById('status').textContent = `Joining ${address}...`;
       toggleControls(true);
       document.getElementById('voiceSidebar').style.display = 'block';
+      document.getElementById('chatInput').style.display = 'block';
+      document.getElementById('sendMsgBtn').style.display = 'inline';
+      document.getElementById('chatBox').style.display = 'block';
+      document.getElementById('typingIndicator').style.display = 'block';
       fetchTokenInfo(address);
       fetchCoinStats(address);
     }
@@ -491,6 +509,10 @@
       document.getElementById('coinStats').textContent = '';
       document.getElementById('voiceSidebar').style.display = 'none';
       toggleControls(false);
+      document.getElementById('chatInput').style.display = 'none';
+      document.getElementById('sendMsgBtn').style.display = 'none';
+      document.getElementById('chatBox').style.display = 'none';
+      document.getElementById('typingIndicator').style.display = 'none';
       address = null;
       mutedUsers = {};
       Object.values(peerCalls).forEach(call => call.close());
@@ -508,8 +530,6 @@
     function toggleControls(show) {
       leaveBtn.style.display = show ? 'inline' : 'none';
       muteBtn.style.display = show ? 'inline' : 'none';
-      document.getElementById('chatInput').style.display = show ? 'block' : 'none';
-      sendMsgBtn.style.display = show ? 'inline' : 'none';
       document.getElementById('kickSelect').parentElement.classList.toggle('active', show);
     }
 
