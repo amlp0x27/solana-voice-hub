@@ -378,7 +378,7 @@
       forceNew: true,
       query: { deviceId },
       transports: ['polling'],
-      timeout: 10000 // Faster timeout
+      timeout: 10000
     });
     let peer = new Peer({
       host: '0.peerjs.com',
@@ -389,23 +389,12 @@
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
     let typingTimeout, mutedUsers = {}, lastMessageTime = 0, peerCalls = {};
     let hasJoined = false;
-    let userMap = new Map(); // Deduplicate users
+    let userMap = new Map();
 
-    const loginBtn = document.getElementById('loginBtn');
-    const joinBtn = document.getElementById('joinBtn');
-    const leaveBtn = document.getElementById('leaveBtn');
-    const muteBtn = document.getElementById('muteBtn');
-    const sendMsgBtn = document.getElementById('sendMsgBtn');
-    const voteKickBtn = document.getElementById('voteKickBtn');
-    const docsBtn = document.getElementById('docsBtn');
-    const backBtn = document.getElementById('backBtn');
-    const chatInput = document.getElementById('chatInput');
-    const volumeMeter = document.getElementById('volumeMeter').querySelector('div');
-
-    // Pre-connect PeerJS
     peer.on('open', id => {
       console.log('[Client] My peer ID:', id);
       socket.emit('userConnected', { peerId: id, username, avatar });
+      if (hasJoined && !address) joinRoom(); // Ensure join after PeerJS ready
     });
     peer.on('error', err => console.error('[Client] PeerJS error:', err));
 
@@ -442,7 +431,7 @@
 
     socket.on('connect', () => {
       console.log('[Client] Socket connected:', socket.id);
-      if (hasJoined) joinRoom();
+      if (hasJoined && peer.id) joinRoom();
     });
     socket.on('connect_error', err => {
       console.error('[Client] Socket connect error:', err);
@@ -462,7 +451,7 @@
       socket.emit('userConnected', { peerId: peer.id || 'no-peer', username, avatar });
     };
 
-    joinBtn.onclick = () => {
+    joinBtn.onclick = async () => {
       if (hasJoined) {
         console.log('[Client] Already joined, ignoring click');
         return;
@@ -471,14 +460,14 @@
       if (!socket.connected) {
         console.log('[Client] Socket not connected, connecting...');
         document.getElementById('status').textContent = 'Connecting to server...';
-        socket.connect(); // Force connect
+        socket.connect();
       }
       if (!peer.id) {
         console.log('[Client] PeerJS not ready, waiting...');
-        peer.on('open', joinRoom);
-      } else {
-        joinRoom();
+        document.getElementById('status').textContent = 'Connecting to voice server...';
+        await new Promise(resolve => peer.on('open', resolve));
       }
+      joinRoom();
     };
 
     leaveBtn.onclick = leaveRoom;
@@ -639,7 +628,7 @@
         if (!existingIds.has(user.id)) {
           userMap.set(user.id, user);
         } else {
-          userMap.set(user.id, { ...userMap.get(user.id), ...user }); // Update existing user
+          userMap.set(user.id, { ...userMap.get(user.id), ...user });
         }
       });
       existingIds.forEach(id => {
@@ -673,7 +662,7 @@
         voiceUsers.appendChild(li);
 
         if (user.peerId && user.peerId !== peer.id && user.peerId !== 'no-peer' && myStream) {
-          console.log('[Client] Calling peer:', user.peerId);
+          console.log('[Client] Calling peer:', user.peerId, 'with my Peer ID:', peer.id);
           const call = peer.call(user.peerId, myStream);
           if (call) {
             peerCalls[user.peerId] = call;
@@ -682,9 +671,13 @@
               const audio = new Audio();
               audio.srcObject = remoteStream;
               audio.autoplay = true;
-              audio.muted = false; // Force unmute
+              audio.muted = false;
               if (mutedUsers[user.id]) audio.muted = true;
-              audio.onplaying = () => detectSpeaking(remoteStream, user.peerId);
+              audio.onplaying = () => {
+                console.log('[Client] Audio playing for:', user.peerId);
+                detectSpeaking(remoteStream, user.peerId);
+              };
+              audio.onerror = err => console.error('[Client] Audio error:', err);
               document.body.appendChild(audio);
             });
             call.on('error', err => console.error('[Client] Call error:', err));
@@ -795,26 +788,24 @@
 
     peer.on('call', call => {
       console.log('[Client] Receiving call from:', call.peer);
-      if (myStream) {
-        call.answer(myStream);
-        call.on('stream', remoteStream => {
-          console.log('[Client] Stream received from:', call.peer);
-          const audio = new Audio();
-          audio.srcObject = remoteStream;
-          audio.autoplay = true;
-          audio.muted = false; // Force unmute
-          if (mutedUsers[call.peer]) audio.muted = true;
-          audio.onplaying = () => {
-            console.log('[Client] Audio playing for:', call.peer);
-            detectSpeaking(remoteStream, call.peer);
-          };
-          audio.onerror = err => console.error('[Client] Audio error:', err);
-          document.body.appendChild(audio);
-          peerCalls[call.peer] = { audioTrack: remoteStream.getAudioTracks()[0] };
-        });
-        call.on('error', err => console.error('[Client] Call error:', err));
-        call.on('close', () => console.log('[Client] Call closed with:', call.peer));
-      }
+      call.answer(myStream || new MediaStream()); // Answer even without mic
+      call.on('stream', remoteStream => {
+        console.log('[Client] Stream received from:', call.peer);
+        const audio = new Audio();
+        audio.srcObject = remoteStream;
+        audio.autoplay = true;
+        audio.muted = false;
+        if (mutedUsers[call.peer]) audio.muted = true;
+        audio.onplaying = () => {
+          console.log('[Client] Audio playing for:', call.peer);
+          detectSpeaking(remoteStream, call.peer);
+        };
+        audio.onerror = err => console.error('[Client] Audio error:', err);
+        document.body.appendChild(audio);
+        peerCalls[call.peer] = { audioTrack: remoteStream.getAudioTracks()[0] };
+      });
+      call.on('error', err => console.error('[Client] Call error:', err));
+      call.on('close', () => console.log('[Client] Call closed with:', call.peer));
     });
   </script>
 </body>
