@@ -370,10 +370,12 @@
   <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
+    const deviceId = Math.random().toString(36).substring(2); // Unique per device instance
     const socket = io('https://solana-voice-hub-node.onrender.com', { 
       reconnection: true, 
       forceNew: true, 
-      query: { deviceId: Math.random().toString(36).substring(2) } // Unique device identifier
+      query: { deviceId }, // Ensure unique connection per device
+      transports: ['websocket'] // Force WebSocket to avoid session conflicts
     });
     let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
@@ -383,7 +385,7 @@
     });
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
     let typingTimeout, mutedUsers = {}, lastMessageTime = 0, peerCalls = {};
-    let hasJoined = false; // Track join state
+    let hasJoined = false;
 
     const loginBtn = document.getElementById('loginBtn');
     const joinBtn = document.getElementById('joinBtn');
@@ -434,7 +436,7 @@
     socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
     socket.on('disconnect', () => {
       console.log('[Client] Socket disconnected:', socket.id);
-      if (address) leaveRoom(); // Ensure UI reflects disconnection
+      if (address) leaveRoom();
     });
 
     loginBtn.onclick = () => {
@@ -498,7 +500,7 @@
       document.getElementById('sendMsgBtn').style.display = 'inline';
       document.getElementById('chatBox').style.display = 'block';
       document.getElementById('typingIndicator').style.display = 'block';
-      joinBtn.disabled = true; // Disable join button
+      joinBtn.disabled = true;
       hasJoined = true;
       fetchTokenInfo(address);
       fetchCoinStats(address);
@@ -519,7 +521,7 @@
       document.getElementById('sendMsgBtn').style.display = 'none';
       document.getElementById('chatBox').style.display = 'none';
       document.getElementById('typingIndicator').style.display = 'none';
-      joinBtn.disabled = false; // Re-enable join button
+      joinBtn.disabled = false;
       hasJoined = false;
       address = null;
       mutedUsers = {};
