@@ -367,23 +367,23 @@
     </div>
   </div>
 
-  <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
     const deviceId = Math.random().toString(36).substring(2);
-    const socket = io('https://solana-voice-hub-node.onrender.com', { 
+    const socket = io('http://localhost:3000', { 
       reconnection: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 500,
       forceNew: true,
       query: { deviceId },
-      transports: ['polling'],
-      timeout: 10000
+      transports: ['websocket', 'polling'], // Try WebSocket locally
+      timeout: 5000
     });
     let peer = new Peer({
-      host: '0.peerjs.com',
-      port: 443,
-      secure: true,
+      host: 'localhost',
+      port: 3000,
+      path: '/peerjs',
       debug: 2
     });
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
@@ -394,7 +394,7 @@
     peer.on('open', id => {
       console.log('[Client] My peer ID:', id);
       socket.emit('userConnected', { peerId: id, username, avatar });
-      if (hasJoined && !address) joinRoom(); // Ensure join after PeerJS ready
+      if (hasJoined && !address) joinRoom();
     });
     peer.on('error', err => console.error('[Client] PeerJS error:', err));
 
@@ -788,7 +788,7 @@
 
     peer.on('call', call => {
       console.log('[Client] Receiving call from:', call.peer);
-      call.answer(myStream || new MediaStream()); // Answer even without mic
+      call.answer(myStream || new MediaStream());
       call.on('stream', remoteStream => {
         console.log('[Client] Stream received from:', call.peer);
         const audio = new Audio();
