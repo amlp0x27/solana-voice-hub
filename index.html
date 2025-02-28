@@ -258,11 +258,10 @@
     #loginScreen .goals li {
       margin: 5px 0;
     }
-    /* Adjusted SVH animation position */
     .logo-animation {
       position: absolute;
-      top: 30px; /* Immediately above "Join the Future" */
-      left: 40px; /* Shifted right within .left */
+      top: 30px;
+      left: 40px;
       font-size: 1.5em;
       color: #00ffcc;
       text-shadow: 0 0 10px #00ffcc;
@@ -279,7 +278,7 @@
       #loginScreen { flex-direction: column; width: 90%; padding: 20px; }
       #loginScreen .center { padding: 0; }
       #loginScreen .right { padding-left: 0; text-align: center; }
-      .logo-animation { display: none; } /* Hide animation on mobile */
+      .logo-animation { display: none; }
     }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
@@ -420,6 +419,7 @@
     peer.on('error', err => console.error('[Client] PeerJS error:', err));
 
     socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
+    socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
 
     loginBtn.onclick = () => {
       username = document.getElementById('usernameInput').value.trim();
@@ -430,7 +430,14 @@
       socket.emit('userConnected', { peerId: peer.id || 'pending', username, avatar });
     };
 
-    joinBtn.onclick = () => joinRoom();
+    joinBtn.onclick = () => {
+      if (!peer.id) {
+        console.log('[Client] PeerJS not ready, waiting...');
+        peer.on('open', () => joinRoom());
+      } else {
+        joinRoom();
+      }
+    };
     leaveBtn.onclick = leaveRoom;
     muteBtn.onclick = toggleMute;
     sendMsgBtn.onclick = sendMessage;
@@ -465,7 +472,7 @@
         document.getElementById('status').textContent = 'Invalid Solana address!';
         return;
       }
-      console.log('[Client] Joining room:', address);
+      console.log('[Client] Joining room:', address, 'with peerId:', peer.id);
       socket.emit('joinRoom', { address, peerId: peer.id, avatar, username });
       document.getElementById('status').textContent = `Joining ${address}...`;
       toggleControls(true);
@@ -573,14 +580,14 @@
         if (!existingIds.has(user.id)) {
           const li = document.createElement('li');
           li.dataset.id = user.id;
-          li.dataset.peerId = user.peerId;
+          li.dataset.peerId = user.peerId || 'no-peer';
           const img = document.createElement('img');
           img.src = user.avatar || 'https://via.placeholder.com/50';
           img.alt = user.username;
           if (user.muted || mutedUsers[user.id]) img.classList.add('muted');
           li.appendChild(img);
           const nameSpan = document.createElement('span');
-          nameSpan.textContent = `${user.username} (${user.peerId.slice(0, 8)})`;
+          nameSpan.textContent = `${user.username} (${user.peerId ? user.peerId.slice(0, 8) : 'no-peer'})`;
           li.appendChild(nameSpan);
           const muteBtn = document.createElement('button');
           muteBtn.classList.add('mute-btn');
@@ -630,11 +637,11 @@
     function updateKickDropdown(users) {
       const kickSelect = document.getElementById('kickSelect');
       kickSelect.innerHTML = '<option value="">Select user to kick</option>';
-      console.log('[Client] Updating kick dropdown:', users);
+      console.log('[Client] Updating kick dropdown:', users.map(u => `${u.username} (${u.id})`));
       users.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id;
-        option.textContent = `${user.username} (${user.peerId.slice(0, 8)})`;
+        option.textContent = `${user.username} (${user.peerId ? user.peerId.slice(0, 8) : 'no-peer'})`;
         kickSelect.appendChild(option);
       });
     }
@@ -671,7 +678,7 @@
     }
 
     function updateVoiceUser(peerId, speaking) {
-      const userItem = document.querySelector(`#voiceUsers li[data-peer-id="${peerId}"] img`);
+      const userItem = document.querySelector(`#voiceUsers li[data-peer-id="${peerId || 'no-peer'}"] img`);
       if (userItem) userItem.classList.toggle('speaking', speaking && !mutedUsers[peerId]);
     }
 
