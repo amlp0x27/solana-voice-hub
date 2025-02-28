@@ -44,7 +44,6 @@ io.on('connection', (socket) => {
     socket.avatar = avatar;
     socket.peerId = peerId;
     console.log(`[Server v22] User ${socket.username} connected with peerId: ${peerId}, socket: ${socket.id}`);
-    // Removed io.emit('roomUpdate', ...) to prevent global empty updates
   });
 
   socket.on('joinRoom', ({ address, peerId, avatar, username }) => {
@@ -144,6 +143,13 @@ io.on('connection', (socket) => {
     }
   });
 
+  socket.on('speakingUpdate', ({ address, peerId, speaking }) => {
+    console.log(`[Server v22] Speaking update: ${peerId} speaking: ${speaking} in room: ${address}`);
+    if (rooms[address]) {
+      io.to(address).emit('speakingUpdate', { peerId, speaking });
+    }
+  });
+
   socket.on('leaveRoom', ({ address, peerId }) => {
     if (rooms[address]) {
       console.log(`[Server v22] Leave: ${address}, socket: ${socket.id}`);
@@ -175,6 +181,5 @@ io.on('connection', (socket) => {
       if (rooms[socket.address].users.length === 0) delete rooms[socket.address];
       console.log(`[Server v22] Room ${socket.address} state after disconnect:`, JSON.stringify(rooms[socket.address]?.users || [], null, 2));
     }
-    // Removed io.emit('roomUpdate', ...) to prevent global empty updates
   });
 });
