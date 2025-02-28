@@ -421,16 +421,6 @@
     });
     peer.on('error', err => {
       console.error('[Client] PeerJS error:', err);
-      document.getElementById('status').textContent = 'Voice service error - retrying...';
-      setTimeout(() => {
-        peer.destroy();
-        peer = new Peer({
-          host: 'solana-voice-hub-node.onrender.com',
-          path: '/peerjs',
-          secure: true,
-          debug: 2
-        });
-      }, 2000);
     });
 
     socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
@@ -442,7 +432,7 @@
       console.log('[Client] Logging in as:', username);
       document.getElementById('loginScreen').style.display = 'none';
       document.getElementById('chatScreen').style.display = 'block';
-      socket.emit('userConnected', { peerId: peer.id || 'pending', username, avatar });
+      socket.emit('userConnected', { peerId: peer.id || 'no-peer', username, avatar });
     };
 
     joinBtn.onclick = () => {
@@ -484,27 +474,8 @@
         document.getElementById('status').textContent = 'Invalid Solana address!';
         return;
       }
-      console.log('[Client] Attempting to join room:', address, 'PeerJS ID:', peer.id);
-      if (!peer.id) {
-        document.getElementById('status').textContent = 'Connecting to voice service...';
-        console.log('[Client] PeerJS not ready, waiting up to 5 seconds...');
-        let timeout = setTimeout(() => {
-          console.error('[Client] PeerJS failed to connect within 5 seconds');
-          document.getElementById('status').textContent = 'Voice service unavailable - please try again.';
-        }, 5000);
-        peer.on('open', id => {
-          clearTimeout(timeout);
-          console.log('[Client] PeerJS connected with ID:', id);
-          doJoinRoom();
-        });
-      } else {
-        doJoinRoom();
-      }
-    }
-
-    function doJoinRoom() {
-      console.log('[Client] Joining room:', address, 'with peerId:', peer.id);
-      socket.emit('joinRoom', { address, peerId: peer.id, avatar, username });
+      console.log('[Client] Joining room:', address, 'with peerId:', peer.id || 'no-peer');
+      socket.emit('joinRoom', { address, peerId: peer.id || 'no-peer', avatar, username });
       document.getElementById('status').textContent = `Joining ${address}...`;
       toggleControls(true);
       document.getElementById('voiceSidebar').style.display = 'block';
@@ -517,7 +488,7 @@
     }
 
     function leaveRoom() {
-      socket.emit('leaveRoom', { address, peerId: peer.id });
+      socket.emit('leaveRoom', { address, peerId: peer.id || 'no-peer' });
       if (myStream) myStream.getTracks().forEach(track => track.stop());
       document.getElementById('status').textContent = 'You have left the room!';
       document.getElementById('chatBox').innerHTML = '';
@@ -639,7 +610,7 @@
           li.appendChild(muteBtn);
           voiceUsers.appendChild(li);
 
-          if (user.peerId && user.peerId !== peer.id && myStream) {
+          if (user.peerId && user.peerId !== peer.id && user.peerId !== 'no-peer' && myStream) {
             console.log('[Client] Calling peer:', user.peerId);
             const call = peer.call(user.peerId, myStream);
             if (call) {
