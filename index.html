@@ -377,7 +377,7 @@
       reconnectionDelay: 500,
       forceNew: true,
       query: { deviceId },
-      transports: ['websocket', 'polling'], // Try WebSocket locally
+      transports: ['polling'], // Force polling to avoid WebSocket issues
       timeout: 5000
     });
     let peer = new Peer({
@@ -390,6 +390,17 @@
     let typingTimeout, mutedUsers = {}, lastMessageTime = 0, peerCalls = {};
     let hasJoined = false;
     let userMap = new Map();
+
+    const loginBtn = document.getElementById('loginBtn');
+    const joinBtn = document.getElementById('joinBtn');
+    const leaveBtn = document.getElementById('leaveBtn');
+    const muteBtn = document.getElementById('muteBtn');
+    const sendMsgBtn = document.getElementById('sendMsgBtn');
+    const voteKickBtn = document.getElementById('voteKickBtn');
+    const docsBtn = document.getElementById('docsBtn');
+    const backBtn = document.getElementById('backBtn');
+    const chatInput = document.getElementById('chatInput');
+    const volumeMeter = document.getElementById('volumeMeter').querySelector('div');
 
     peer.on('open', id => {
       console.log('[Client] My peer ID:', id);
@@ -431,11 +442,12 @@
 
     socket.on('connect', () => {
       console.log('[Client] Socket connected:', socket.id);
+      document.getElementById('status').textContent = 'Connected to server!';
       if (hasJoined && peer.id) joinRoom();
     });
     socket.on('connect_error', err => {
       console.error('[Client] Socket connect error:', err);
-      document.getElementById('status').textContent = 'Socket connection error - retrying...';
+      document.getElementById('status').textContent = 'Connection failed - retrying...';
     });
     socket.on('disconnect', () => {
       console.log('[Client] Socket disconnected:', socket.id);
@@ -451,7 +463,7 @@
       socket.emit('userConnected', { peerId: peer.id || 'no-peer', username, avatar });
     };
 
-    joinBtn.onclick = async () => {
+    joinBtn.onclick = () => {
       if (hasJoined) {
         console.log('[Client] Already joined, ignoring click');
         return;
@@ -465,9 +477,10 @@
       if (!peer.id) {
         console.log('[Client] PeerJS not ready, waiting...');
         document.getElementById('status').textContent = 'Connecting to voice server...';
-        await new Promise(resolve => peer.on('open', resolve));
+        peer.on('open', () => joinRoom());
+      } else {
+        joinRoom();
       }
-      joinRoom();
     };
 
     leaveBtn.onclick = leaveRoom;
