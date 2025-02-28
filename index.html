@@ -373,15 +373,15 @@
     const deviceId = Math.random().toString(36).substring(2);
     const socket = io('https://solana-voice-hub-node.onrender.com', { 
       reconnection: true, 
-      reconnectionAttempts: 10, // Retry connection
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
       forceNew: true, 
       query: { deviceId },
-      transports: ['websocket', 'polling'] // Fallback to polling if WebSocket fails
+      transports: ['polling'] // Force polling to avoid WebSocket issues
     });
     let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
-      port: 443, // Explicit HTTPS port
+      port: 443,
       path: '/peerjs',
       secure: true,
       debug: 2
@@ -437,7 +437,7 @@
 
     socket.on('connect', () => {
       console.log('[Client] Socket connected:', socket.id);
-      if (hasJoined) joinRoom(); // Rejoin if connection drops mid-session
+      if (hasJoined) joinRoom(); // Rejoin if connection drops
     });
     socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
     socket.on('disconnect', () => {
@@ -685,7 +685,7 @@
           li.textContent = `${msg.username}: ${msg.text}`;
           chatBox.appendChild(li);
         });
-        chatBox.scrollTop = chatBox.scrollHeight; // Ensure scroll works
+        chatBox.scrollTop = chatBox.scrollHeight;
       }
     }
 
