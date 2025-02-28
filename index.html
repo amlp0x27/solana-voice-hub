@@ -280,7 +280,6 @@
       #loginScreen .right { padding-left: 0; text-align: center; }
       .logo-animation { display: none; }
     }
-    /* Hide chat elements by default */
     #chatInput, #sendMsgBtn, #chatBox, #typingIndicator {
       display: none;
     }
@@ -368,7 +367,7 @@
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
     const socket = io('https://solana-voice-hub-node.onrender.com', { reconnection: true });
-    const peer = new Peer({
+    let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
       path: '/peerjs',
       secure: true,
@@ -420,7 +419,19 @@
       console.log('[Client] My peer ID:', id);
       socket.emit('userConnected', { peerId: id, username, avatar });
     });
-    peer.on('error', err => console.error('[Client] PeerJS error:', err));
+    peer.on('error', err => {
+      console.error('[Client] PeerJS error:', err);
+      if (err.type === 'network' || err.type === 'server-disconnected') {
+        console.log('[Client] Reconnecting PeerJS...');
+        peer.destroy();
+        peer = new Peer({
+          host: 'solana-voice-hub-node.onrender.com',
+          path: '/peerjs',
+          secure: true,
+          debug: 2
+        });
+      }
+    });
 
     socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
     socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
@@ -435,7 +446,7 @@
     };
 
     joinBtn.onclick = () => {
-      console.log('[Client] Join button clicked');
+      console.log('[Client] Join button clicked, PeerJS ID:', peer.id);
       joinRoom();
     };
 
@@ -474,10 +485,10 @@
         return;
       }
       if (!peer.id) {
-        console.log('[Client] PeerJS not ready yet');
+        console.log('[Client] PeerJS not ready, waiting...');
         document.getElementById('status').textContent = 'Connecting to voice service...';
-        peer.once('open', () => {
-          console.log('[Client] PeerJS ready, joining room:', address);
+        peer.on('open', id => {
+          console.log('[Client] PeerJS connected with ID:', id);
           doJoinRoom();
         });
       } else {
