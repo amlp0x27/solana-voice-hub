@@ -367,23 +367,23 @@
     </div>
   </div>
 
-  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
     const deviceId = Math.random().toString(36).substring(2);
-    const socket = io('http://localhost:3000', { 
+    const socket = io('https://solana-voice-hub-node.onrender.com', { 
       reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 500,
+      reconnectionAttempts: 3, // Fewer retries
+      reconnectionDelay: 200,  // Faster retries
       forceNew: true,
       query: { deviceId },
-      transports: ['polling'], // Force polling to avoid WebSocket issues
-      timeout: 5000
+      transports: ['polling'], // Match server
+      timeout: 3000           // Shorter timeout
     });
     let peer = new Peer({
-      host: 'localhost',
-      port: 3000,
-      path: '/peerjs',
+      host: '0.peerjs.com', // Public server since Render’s PeerJS failed
+      port: 443,
+      secure: true,
       debug: 2
     });
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
