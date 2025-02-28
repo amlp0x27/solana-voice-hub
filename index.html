@@ -370,15 +370,18 @@
   <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
-    const deviceId = Math.random().toString(36).substring(2); // Unique per device instance
+    const deviceId = Math.random().toString(36).substring(2);
     const socket = io('https://solana-voice-hub-node.onrender.com', { 
       reconnection: true, 
+      reconnectionAttempts: 10, // Retry connection
+      reconnectionDelay: 1000,
       forceNew: true, 
-      query: { deviceId }, // Ensure unique connection per device
-      transports: ['websocket'] // Force WebSocket to avoid session conflicts
+      query: { deviceId },
+      transports: ['websocket', 'polling'] // Fallback to polling if WebSocket fails
     });
     let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
+      port: 443, // Explicit HTTPS port
       path: '/peerjs',
       secure: true,
       debug: 2
@@ -432,11 +435,14 @@
     });
     peer.on('error', err => console.error('[Client] PeerJS error:', err));
 
-    socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
+    socket.on('connect', () => {
+      console.log('[Client] Socket connected:', socket.id);
+      if (hasJoined) joinRoom(); // Rejoin if connection drops mid-session
+    });
     socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
     socket.on('disconnect', () => {
       console.log('[Client] Socket disconnected:', socket.id);
-      if (address) leaveRoom();
+      if (address) document.getElementById('status').textContent = 'Disconnected - reconnecting...';
     });
 
     loginBtn.onclick = () => {
@@ -451,6 +457,12 @@
     joinBtn.onclick = () => {
       if (hasJoined) {
         console.log('[Client] Already joined, ignoring click');
+        return;
+      }
+      if (!socket.connected) {
+        console.log('[Client] Socket not connected, waiting...');
+        document.getElementById('status').textContent = 'Connecting to server...';
+        socket.on('connect', joinRoom);
         return;
       }
       console.log('[Client] Join button clicked, Socket ID:', socket.id, 'PeerJS ID:', peer.id);
@@ -479,7 +491,7 @@
     };
 
     chatInput.oninput = () => {
-      if (!address) return;
+      if (!address || !socket.connected) return;
       clearTimeout(typingTimeout);
       socket.emit('typing', { address, username });
       typingTimeout = setTimeout(() => socket.emit('stopTyping', { address }), 1000);
@@ -603,7 +615,7 @@
 
     function updateVoiceUsers(users) {
       const voiceUsers = document.getElementById('voiceUsers');
-      voiceUsers.innerHTML = ''; // Clear and rebuild to ensure all users show
+      voiceUsers.innerHTML = ''; // Clear and rebuild
       console.log('[Client] Updating voice users:', users.map(u => `${u.username} (${u.id})`));
 
       users.forEach(user => {
@@ -673,7 +685,7 @@
           li.textContent = `${msg.username}: ${msg.text}`;
           chatBox.appendChild(li);
         });
-        chatBox.scrollTop = chatBox.scrollHeight;
+        chatBox.scrollTop = chatBox.scrollHeight; // Ensure scroll works
       }
     }
 
@@ -685,7 +697,7 @@
         return;
       }
       const msg = chatInput.value.trim();
-      if (msg && address) {
+      if (msg && address && socket.connected) {
         console.log('[Client] Sending message:', msg);
         socket.emit('chatMessage', { address, message: msg, username });
         chatInput.value = '';
