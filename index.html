@@ -372,7 +372,7 @@
       debug: 2
     });
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
-    let typingTimeout, mutedUsers = {}, lastMessageTime = 0;
+    let typingTimeout, mutedUsers = {}, lastMessageTime = 0, peerCalls = {};
 
     const loginBtn = document.getElementById('loginBtn');
     const joinBtn = document.getElementById('joinBtn');
@@ -420,7 +420,6 @@
     peer.on('error', err => console.error('[Client] PeerJS error:', err));
 
     socket.on('connect', () => console.log('[Client] Socket connected:', socket.id));
-    socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
 
     loginBtn.onclick = () => {
       username = document.getElementById('usernameInput').value.trim();
@@ -487,6 +486,8 @@
       toggleControls(false);
       address = null;
       mutedUsers = {};
+      Object.values(peerCalls).forEach(call => call.close());
+      peerCalls = {};
     }
 
     let muted = false;
@@ -506,7 +507,7 @@
     }
 
     socket.on('roomUpdate', data => {
-      console.log('[Client] Room update:', data);
+      console.log('[Client] Room update:', JSON.stringify(data, null, 2));
       document.getElementById('status').textContent = `Connected to ${data.address} - ${data.users.length} in room`;
       document.getElementById('userCount').textContent = `Users Online: ${data.totalUsers}`;
       updateVoiceUsers(data.users);
@@ -523,6 +524,10 @@
       console.log('[Client] User left:', id);
       document.getElementById('status').textContent += ` - User left!`;
       delete mutedUsers[id];
+      if (peerCalls[id]) {
+        peerCalls[id].close();
+        delete peerCalls[id];
+      }
     });
 
     socket.on('userKicked', userId => {
@@ -561,54 +566,66 @@
 
     function updateVoiceUsers(users) {
       const voiceUsers = document.getElementById('voiceUsers');
-      voiceUsers.innerHTML = '';
-      console.log('[Client] Updating voice users:', users);
-      users.forEach(user => {
-        const li = document.createElement('li');
-        li.dataset.id = user.id;
-        li.dataset.peerId = user.peerId;
-        const img = document.createElement('img');
-        img.src = user.avatar || 'https://via.placeholder.com/50';
-        img.alt = user.username;
-        if (user.muted || mutedUsers[user.id]) img.classList.add('muted');
-        li.appendChild(img);
-        const nameSpan = document.createElement('span');
-        nameSpan.textContent = user.username;
-        li.appendChild(nameSpan);
-        const muteBtn = document.createElement('button');
-        muteBtn.classList.add('mute-btn');
-        muteBtn.textContent = user.muted || mutedUsers[user.id] ? 'Unmute' : 'Mute';
-        muteBtn.onclick = () => {
-          socket.emit('muteUser', { address, targetId: user.id });
-          mutedUsers[user.id] = !mutedUsers[user.id];
-          muteBtn.textContent = mutedUsers[user.id] ? 'Unmute' : 'Mute';
-          if (mutedUsers[user.id] && peerCalls[user.peerId]) peerCalls[user.peerId].audioTrack.enabled = false;
-          else if (peerCalls[user.peerId]) peerCalls[user.peerId].audioTrack.enabled = true;
-        };
-        li.appendChild(muteBtn);
-        voiceUsers.appendChild(li);
+      const existingIds = new Set(Array.from(voiceUsers.children).map(li => li.dataset.id));
+      console.log('[Client] Updating voice users:', users.map(u => `${u.username} (${u.id})`));
 
-        if (user.peerId && user.peerId !== peer.id && myStream) {
-          console.log('[Client] Calling peer:', user.peerId);
-          const call = peer.call(user.peerId, myStream);
-          if (call) {
-            peerCalls[user.peerId] = call;
-            call.on('stream', remoteStream => {
-              console.log('[Client] Received stream from:', user.peerId);
-              const audio = new Audio();
-              audio.srcObject = remoteStream;
-              audio.autoplay = true;
-              if (mutedUsers[user.id]) audio.muted = true;
-              audio.onplaying = () => detectSpeaking(remoteStream, user.peerId);
-              document.body.appendChild(audio);
-            });
-            call.on('error', err => console.error('[Client] Call error:', err));
+      users.forEach(user => {
+        if (!existingIds.has(user.id)) {
+          const li = document.createElement('li');
+          li.dataset.id = user.id;
+          li.dataset.peerId = user.peerId;
+          const img = document.createElement('img');
+          img.src = user.avatar || 'https://via.placeholder.com/50';
+          img.alt = user.username;
+          if (user.muted || mutedUsers[user.id]) img.classList.add('muted');
+          li.appendChild(img);
+          const nameSpan = document.createElement('span');
+          nameSpan.textContent = `${user.username} (${user.peerId.slice(0, 8)})`;
+          li.appendChild(nameSpan);
+          const muteBtn = document.createElement('button');
+          muteBtn.classList.add('mute-btn');
+          muteBtn.textContent = user.muted || mutedUsers[user.id] ? 'Unmute' : 'Mute';
+          muteBtn.onclick = () => {
+            socket.emit('muteUser', { address, targetId: user.id });
+            mutedUsers[user.id] = !mutedUsers[user.id];
+            muteBtn.textContent = mutedUsers[user.id] ? 'Unmute' : 'Mute';
+            if (mutedUsers[user.id] && peerCalls[user.peerId]) peerCalls[user.peerId].audioTrack.enabled = false;
+            else if (peerCalls[user.peerId]) peerCalls[user.peerId].audioTrack.enabled = true;
+          };
+          li.appendChild(muteBtn);
+          voiceUsers.appendChild(li);
+
+          if (user.peerId && user.peerId !== peer.id && myStream) {
+            console.log('[Client] Calling peer:', user.peerId);
+            const call = peer.call(user.peerId, myStream);
+            if (call) {
+              peerCalls[user.peerId] = call;
+              call.on('stream', remoteStream => {
+                console.log('[Client] Received stream from:', user.peerId);
+                const audio = new Audio();
+                audio.srcObject = remoteStream;
+                audio.autoplay = true;
+                if (mutedUsers[user.id]) audio.muted = true;
+                audio.onplaying = () => detectSpeaking(remoteStream, user.peerId);
+                document.body.appendChild(audio);
+              });
+              call.on('error', err => console.error('[Client] Call error:', err));
+            }
+          }
+        }
+      });
+
+      Array.from(voiceUsers.children).forEach(li => {
+        const id = li.dataset.id;
+        if (!users.some(u => u.id === id)) {
+          li.remove();
+          if (peerCalls[li.dataset.peerId]) {
+            peerCalls[li.dataset.peerId].close();
+            delete peerCalls[li.dataset.peerId];
           }
         }
       });
     }
-
-    let peerCalls = {};
 
     function updateKickDropdown(users) {
       const kickSelect = document.getElementById('kickSelect');
@@ -617,7 +634,7 @@
       users.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id;
-        option.textContent = user.username;
+        option.textContent = `${user.username} (${user.peerId.slice(0, 8)})`;
         kickSelect.appendChild(option);
       });
     }
