@@ -380,9 +380,8 @@
       transports: ['polling']
     });
     let peer = new Peer({
-      host: 'solana-voice-hub-node.onrender.com',
+      host: '0.peerjs.com', // Fallback to public PeerJS server
       port: 443,
-      path: '/peerjs',
       secure: true,
       debug: 2
     });
@@ -419,6 +418,9 @@
           volumeMeter.style.width = `${(average / 255) * 100}%`;
           const speaking = average > 20;
           updateVoiceUser(peer.id, speaking);
+          if (socket.connected && address) {
+            socket.emit('speakingUpdate', { address, peerId: peer.id, speaking });
+          }
           requestAnimationFrame(updateVolume);
         }
         updateVolume();
@@ -613,6 +615,11 @@
       setTimeout(() => document.getElementById('typingIndicator').textContent = '', 2000);
     });
 
+    socket.on('speakingUpdate', ({ peerId, speaking }) => {
+      console.log('[Client] Speaking update:', peerId, speaking);
+      updateVoiceUser(peerId, speaking);
+    });
+
     function updateVoiceUsers(users) {
       const voiceUsers = document.getElementById('voiceUsers');
       voiceUsers.innerHTML = '';
@@ -657,6 +664,9 @@
               document.body.appendChild(audio);
             });
             call.on('error', err => console.error('[Client] Call error:', err));
+            call.on('close', () => console.log('[Client] Call closed with:', user.peerId));
+          } else {
+            console.error('[Client] Failed to initiate call to:', user.peerId);
           }
         }
       });
@@ -707,7 +717,10 @@
 
     function updateVoiceUser(peerId, speaking) {
       const userItem = document.querySelector(`#voiceUsers li[data-peer-id="${peerId || 'no-peer'}"] img`);
-      if (userItem) userItem.classList.toggle('speaking', speaking && !mutedUsers[peerId]);
+      if (userItem) {
+        console.log('[Client] Updating voice user:', peerId, 'speaking:', speaking);
+        userItem.classList.toggle('speaking', speaking && !mutedUsers[peerId]);
+      }
     }
 
     function detectSpeaking(stream, peerId) {
@@ -724,6 +737,9 @@
         const average = dataArray.reduce((a, b) => a + b) / bufferLength;
         const speaking = average > 20;
         updateVoiceUser(peerId, speaking);
+        if (socket.connected && address) {
+          socket.emit('speakingUpdate', { address, peerId, speaking });
+        }
         requestAnimationFrame(checkVolume);
       }
       checkVolume();
@@ -768,6 +784,7 @@
           peerCalls[call.peer] = { audioTrack: remoteStream.getAudioTracks()[0] };
         });
         call.on('error', err => console.error('[Client] Call error:', err));
+        call.on('close', () => console.log('[Client] Call closed with:', call.peer));
       }
     });
   </script>
