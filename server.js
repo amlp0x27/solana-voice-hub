@@ -5,8 +5,8 @@ const app = express();
 
 app.use(express.static(__dirname));
 
-const server = app.listen(process.env.PORT || 10000, '0.0.0.0', () => {
-  console.log(`[Server v22] Server running on port ${process.env.PORT || 10000}`);
+const server = app.listen(process.env.PORT || 3000, '0.0.0.0', () => {
+  console.log(`[Server v23] Server running on port ${process.env.PORT || 3000}`);
 });
 
 const io = new Server(server, { 
@@ -37,17 +37,17 @@ function filterText(text) {
 }
 
 io.on('connection', (socket) => {
-  console.log(`[Server v22] User connected: ${socket.id}`);
+  console.log(`[Server v23] User connected: ${socket.id}`);
 
   socket.on('userConnected', ({ peerId, username, avatar }) => {
     socket.username = filterText(username);
     socket.avatar = avatar;
     socket.peerId = peerId;
-    console.log(`[Server v22] User ${socket.username} connected with peerId: ${peerId}, socket: ${socket.id}`);
+    console.log(`[Server v23] User ${socket.username} connected with peerId: ${peerId}, socket: ${socket.id}`);
   });
 
   socket.on('joinRoom', ({ address, peerId, avatar, username }) => {
-    console.log(`[Server v22] Join: ${address}, peerId: ${peerId}, username: ${username}, socket: ${socket.id}`);
+    console.log(`[Server v23] Join: ${address}, peerId: ${peerId}, username: ${username}, socket: ${socket.id}`);
     socket.join(address);
     socket.address = address;
 
@@ -64,7 +64,7 @@ io.on('connection', (socket) => {
     };
     io.to(address).emit('roomUpdate', roomData);
     socket.broadcast.to(address).emit('userJoined', { id: socket.id, avatar, username: cleanUsername });
-    console.log(`[Server v22] Room ${address} state after join:`, JSON.stringify(rooms[address].users, null, 2));
+    console.log(`[Server v23] Room ${address} state after join:`, JSON.stringify(rooms[address].users, null, 2));
   });
 
   socket.on('chatMessage', ({ address, message, username }) => {
@@ -79,7 +79,7 @@ io.on('connection', (socket) => {
       rooms[address].messages.push({ username, text: cleanMessage, timestamp: now });
       io.to(address).emit('newMessage', rooms[address].messages);
       messageCooldowns.set(socket.id, now);
-      console.log(`[Server v22] Message in ${address}: ${username}: ${cleanMessage}`);
+      console.log(`[Server v23] Message in ${address}: ${username}: ${cleanMessage}`);
     }
   });
 
@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
   });
 
   socket.on('speakingUpdate', ({ address, peerId, speaking }) => {
-    console.log(`[Server v22] Speaking update: ${peerId} speaking: ${speaking} in room: ${address}`);
+    console.log(`[Server v23] Speaking update: ${peerId} speaking: ${speaking} in room: ${address}`);
     if (rooms[address]) {
       io.to(address).emit('speakingUpdate', { peerId, speaking });
     }
@@ -152,7 +152,7 @@ io.on('connection', (socket) => {
 
   socket.on('leaveRoom', ({ address, peerId }) => {
     if (rooms[address]) {
-      console.log(`[Server v22] Leave: ${address}, socket: ${socket.id}`);
+      console.log(`[Server v23] Leave: ${address}, socket: ${socket.id}`);
       rooms[address].users = rooms[address].users.filter(u => u.id !== socket.id);
       io.to(address).emit('userLeft', socket.id);
       io.to(address).emit('roomUpdate', {
@@ -163,12 +163,12 @@ io.on('connection', (socket) => {
       });
       socket.leave(address);
       socket.address = null;
-      console.log(`[Server v22] Room ${address} state after leave:`, JSON.stringify(rooms[address]?.users || [], null, 2));
+      console.log(`[Server v23] Room ${address} state after leave:`, JSON.stringify(rooms[address]?.users || [], null, 2));
     }
   });
 
   socket.on('disconnect', () => {
-    console.log(`[Server v22] User disconnected: ${socket.id}`);
+    console.log(`[Server v23] User disconnected: ${socket.id}`);
     if (socket.address && rooms[socket.address]) {
       rooms[socket.address].users = rooms[socket.address].users.filter(u => u.id !== socket.id);
       io.to(socket.address).emit('userLeft', socket.id);
@@ -179,7 +179,7 @@ io.on('connection', (socket) => {
         totalUsers: io.engine.clientsCount
       });
       if (rooms[socket.address].users.length === 0) delete rooms[socket.address];
-      console.log(`[Server v22] Room ${socket.address} state after disconnect:`, JSON.stringify(rooms[socket.address]?.users || [], null, 2));
+      console.log(`[Server v23] Room ${socket.address} state after disconnect:`, JSON.stringify(rooms[socket.address]?.users || [], null, 2));
     }
   });
 });
