@@ -366,7 +366,7 @@
   <script src="https://solana-voice-hub-node.onrender.com/socket.io/socket.io.js"></script>
   <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
-    const socket = io('https://solana-voice-hub-node.onrender.com', { reconnection: true });
+    const socket = io('https://solana-voice-hub-node.onrender.com', { reconnection: true, forceNew: true });
     let peer = new Peer({
       host: 'solana-voice-hub-node.onrender.com',
       path: '/peerjs',
@@ -434,7 +434,7 @@
     };
 
     joinBtn.onclick = () => {
-      console.log('[Client] Join button clicked, PeerJS ID:', peer.id);
+      console.log('[Client] Join button clicked, Socket ID:', socket.id, 'PeerJS ID:', peer.id);
       joinRoom();
     };
 
@@ -472,7 +472,7 @@
         document.getElementById('status').textContent = 'Invalid Solana address!';
         return;
       }
-      console.log('[Client] Joining room:', address, 'with peerId:', peer.id || 'no-peer');
+      console.log('[Client] Joining room:', address, 'with Socket ID:', socket.id, 'PeerJS ID:', peer.id || 'no-peer');
       socket.emit('joinRoom', { address, peerId: peer.id || 'no-peer', avatar, username });
       document.getElementById('status').textContent = `Joining ${address}...`;
       toggleControls(true);
@@ -486,6 +486,7 @@
     }
 
     function leaveRoom() {
+      console.log('[Client] Leaving room:', address, 'Socket ID:', socket.id);
       socket.emit('leaveRoom', { address, peerId: peer.id || 'no-peer' });
       if (myStream) myStream.getTracks().forEach(track => track.stop());
       document.getElementById('status').textContent = 'You have left the room!';
@@ -592,7 +593,7 @@
         if (user.muted || mutedUsers[user.id]) img.classList.add('muted');
         li.appendChild(img);
         const nameSpan = document.createElement('span');
-        nameSpan.textContent = `${user.username} (${user.peerId ? user.peerId.slice(0, 8) : 'no-peer'})`;
+        nameSpan.textContent = `${user.username} (${user.id.slice(0, 8)})`;
         li.appendChild(nameSpan);
         const muteBtn = document.createElement('button');
         muteBtn.classList.add('mute-btn');
@@ -634,7 +635,7 @@
       users.forEach(user => {
         const option = document.createElement('option');
         option.value = user.id;
-        option.textContent = `${user.username} (${user.peerId ? user.peerId.slice(0, 8) : 'no-peer'})`;
+        option.textContent = `${user.username} (${user.id.slice(0, 8)})`;
         kickSelect.appendChild(option);
       });
     }
