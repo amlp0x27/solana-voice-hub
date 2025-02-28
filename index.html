@@ -372,15 +372,16 @@
   <script>
     const deviceId = Math.random().toString(36).substring(2);
     const socket = io('https://solana-voice-hub-node.onrender.com', { 
-      reconnection: true, 
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      forceNew: true, 
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 500,
+      forceNew: true,
       query: { deviceId },
-      transports: ['polling']
+      transports: ['polling'],
+      timeout: 10000 // Faster timeout
     });
     let peer = new Peer({
-      host: '0.peerjs.com', // Fallback to public PeerJS server
+      host: '0.peerjs.com',
       port: 443,
       secure: true,
       debug: 2
@@ -388,6 +389,7 @@
     let myStream, address, username, avatar = `https://api.dicebear.com/9.x/bottts/svg?seed=${Math.random()}`;
     let typingTimeout, mutedUsers = {}, lastMessageTime = 0, peerCalls = {};
     let hasJoined = false;
+    let userMap = new Map(); // Deduplicate users
 
     const loginBtn = document.getElementById('loginBtn');
     const joinBtn = document.getElementById('joinBtn');
@@ -399,6 +401,13 @@
     const backBtn = document.getElementById('backBtn');
     const chatInput = document.getElementById('chatInput');
     const volumeMeter = document.getElementById('volumeMeter').querySelector('div');
+
+    // Pre-connect PeerJS
+    peer.on('open', id => {
+      console.log('[Client] My peer ID:', id);
+      socket.emit('userConnected', { peerId: id, username, avatar });
+    });
+    peer.on('error', err => console.error('[Client] PeerJS error:', err));
 
     navigator.mediaDevices.getUserMedia({ audio: true })
       .then(stream => {
@@ -431,17 +440,14 @@
         document.getElementById('status').textContent = 'Mic unavailable - please allow access or check settings.';
       });
 
-    peer.on('open', id => {
-      console.log('[Client] My peer ID:', id);
-      socket.emit('userConnected', { peerId: id, username, avatar });
-    });
-    peer.on('error', err => console.error('[Client] PeerJS error:', err));
-
     socket.on('connect', () => {
       console.log('[Client] Socket connected:', socket.id);
       if (hasJoined) joinRoom();
     });
-    socket.on('connect_error', err => console.error('[Client] Socket connect error:', err));
+    socket.on('connect_error', err => {
+      console.error('[Client] Socket connect error:', err);
+      document.getElementById('status').textContent = 'Socket connection error - retrying...';
+    });
     socket.on('disconnect', () => {
       console.log('[Client] Socket disconnected:', socket.id);
       if (address) document.getElementById('status').textContent = 'Disconnected - reconnecting...';
@@ -461,14 +467,18 @@
         console.log('[Client] Already joined, ignoring click');
         return;
       }
-      if (!socket.connected) {
-        console.log('[Client] Socket not connected, waiting...');
-        document.getElementById('status').textContent = 'Connecting to server...';
-        socket.on('connect', joinRoom);
-        return;
-      }
       console.log('[Client] Join button clicked, Socket ID:', socket.id, 'PeerJS ID:', peer.id);
-      joinRoom();
+      if (!socket.connected) {
+        console.log('[Client] Socket not connected, connecting...');
+        document.getElementById('status').textContent = 'Connecting to server...';
+        socket.connect(); // Force connect
+      }
+      if (!peer.id) {
+        console.log('[Client] PeerJS not ready, waiting...');
+        peer.on('open', joinRoom);
+      } else {
+        joinRoom();
+      }
     };
 
     leaveBtn.onclick = leaveRoom;
@@ -539,6 +549,7 @@
       hasJoined = false;
       address = null;
       mutedUsers = {};
+      userMap.clear();
       Object.values(peerCalls).forEach(call => call.close());
       peerCalls = {};
     }
@@ -579,6 +590,7 @@
         peerCalls[id].close();
         delete peerCalls[id];
       }
+      userMap.delete(id);
     });
 
     socket.on('userKicked', userId => {
@@ -622,9 +634,20 @@
 
     function updateVoiceUsers(users) {
       const voiceUsers = document.getElementById('voiceUsers');
-      voiceUsers.innerHTML = '';
-      console.log('[Client] Updating voice users:', users.map(u => `${u.username} (${u.id})`));
+      const existingIds = new Set(userMap.keys());
       users.forEach(user => {
+        if (!existingIds.has(user.id)) {
+          userMap.set(user.id, user);
+        } else {
+          userMap.set(user.id, { ...userMap.get(user.id), ...user }); // Update existing user
+        }
+      });
+      existingIds.forEach(id => {
+        if (!users.some(u => u.id === id)) userMap.delete(id);
+      });
+      voiceUsers.innerHTML = '';
+      console.log('[Client] Updating voice users:', Array.from(userMap.values()).map(u => `${u.username} (${u.id})`));
+      userMap.forEach(user => {
         const li = document.createElement('li');
         li.dataset.id = user.id;
         li.dataset.peerId = user.peerId || 'no-peer';
@@ -659,6 +682,7 @@
               const audio = new Audio();
               audio.srcObject = remoteStream;
               audio.autoplay = true;
+              audio.muted = false; // Force unmute
               if (mutedUsers[user.id]) audio.muted = true;
               audio.onplaying = () => detectSpeaking(remoteStream, user.peerId);
               document.body.appendChild(audio);
@@ -778,8 +802,13 @@
           const audio = new Audio();
           audio.srcObject = remoteStream;
           audio.autoplay = true;
+          audio.muted = false; // Force unmute
           if (mutedUsers[call.peer]) audio.muted = true;
-          audio.onplaying = () => detectSpeaking(remoteStream, call.peer);
+          audio.onplaying = () => {
+            console.log('[Client] Audio playing for:', call.peer);
+            detectSpeaking(remoteStream, call.peer);
+          };
+          audio.onerror = err => console.error('[Client] Audio error:', err);
           document.body.appendChild(audio);
           peerCalls[call.peer] = { audioTrack: remoteStream.getAudioTracks()[0] };
         });
